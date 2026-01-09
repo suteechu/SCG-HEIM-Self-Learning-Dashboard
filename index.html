@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCG HEIM Dashboard Self Learning - V1.5.9 Auto Update (Large Data Support)</title>
+    <title>SCG HEIM Dashboard Self Learning - V1.6.2 Management & Fix</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -41,14 +41,15 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-black tracking-tighter text-slate-800 uppercase italic leading-none">HEIM OPS</h1>
-                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 italic">Dashboard Self Learning (Large Data Support) - V1.5.9</p>
+                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 italic">Dashboard Self Learning - V1.6.2</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-2">
+                <!-- Sync Status Light -->
                 <div id="cloud-status" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg mr-2">
                     <div id="status-dot" class="w-2 h-2 rounded-full bg-slate-300"></div>
-                    <span id="status-text" class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Offline</span>
+                    <span id="status-text" class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Checking Cloud...</span>
                 </div>
 
                 <div class="bg-slate-100 p-1 rounded-lg flex">
@@ -56,7 +57,10 @@
                         <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> ภาพรวม
                     </button>
                     <button id="tab-earlybird" onclick="switchTab('earlybird')" class="flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all text-slate-500">
-                        <i data-lucide="sunrise" class="w-3.5 h-3.5"></i> ผู้เรียนคนแรก
+                        <i data-lucide="sunrise" class="w-3.5 h-3.5"></i> Speed Star
+                    </button>
+                    <button id="tab-manage" onclick="switchTab('manage')" class="flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all text-slate-500">
+                        <i data-lucide="settings" class="w-3.5 h-3.5"></i> จัดการข้อมูล
                     </button>
                 </div>
                 <div class="w-px h-5 bg-slate-200 mx-1 hidden md:block"></div>
@@ -68,69 +72,65 @@
                 <button onclick="toggleImportModal()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 shadow hover:bg-red-700 transition-all">
                     <i data-lucide="upload" class="w-3.5 h-3.5"></i> นำเข้าไฟล์
                 </button>
-                <button onclick="clearData()" class="p-2 text-slate-300 hover:text-red-600 transition-colors" title="ล้างข้อมูลทั้งหมด">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                </button>
             </div>
         </div>
     </header>
 
-    <!-- Inline Source Path Editor -->
-    <div class="max-w-7xl mx-auto px-6 pt-4">
-        <div class="bg-white border border-slate-200 rounded-2xl p-3 px-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="folder" class="w-4 h-4"></i></div>
-                <div>
-                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest italic leading-none mb-1">Source Path (D:\..)</p>
-                    <input id="main-source-path" onblur="updatePath(this.value)" type="text" placeholder="ระบุโฟลเดอร์ไฟล์..." class="bg-transparent border-none p-0 text-xs font-bold text-slate-700 focus:ring-0 w-64 md:w-80 outline-none" />
-                </div>
+    <!-- COMPACT Source Path Bar -->
+    <div class="max-w-7xl mx-auto px-6 pt-3">
+        <div class="bg-slate-900 text-white rounded-xl py-1.5 px-4 flex items-center justify-between gap-4 shadow-lg border border-slate-700 group transition-all">
+            <div class="flex items-center gap-3 flex-1 overflow-hidden">
+                <i data-lucide="folder-search" class="w-3.5 h-3.5 text-blue-400 shrink-0"></i>
+                <span class="text-[8px] font-black uppercase tracking-widest text-slate-500 border-r border-slate-700 pr-3 hidden sm:block italic shrink-0">Local Path Memo</span>
+                <input id="main-source-path" onblur="updatePath(this.value)" type="text" placeholder="D:\00_Bi\SelfLearningReports (ช่วยจำแหล่งข้อมูล)" class="bg-transparent border-none p-0 text-[10px] font-bold text-white focus:ring-0 w-full outline-none placeholder:text-slate-600" />
             </div>
-            <p class="text-[9px] text-slate-300 font-bold italic uppercase tracking-widest">ระบบจะแบ่งข้อมูลและบันทึกลง Cloud อัตโนมัติ (รองรับข้อมูลขนาดใหญ่)</p>
+            <div class="flex items-center gap-3 shrink-0">
+                <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" title="Auto Update is ON"></div>
+            </div>
         </div>
     </div>
 
-    <main id="capture-area" class="max-w-7xl mx-auto px-6 py-6 bg-[#f1f5f9]">
+    <main id="capture-area" class="max-w-7xl mx-auto px-6 py-4 bg-[#f1f5f9]">
         
-        <!-- Filters Area -->
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6 flex flex-wrap items-center gap-3 print:hidden">
-            <div class="flex flex-wrap gap-3 items-center flex-1">
-                <div class="flex items-center gap-2 bg-slate-50 p-1 rounded-lg border border-slate-100">
-                    <span class="text-[8px] font-black uppercase text-slate-400 px-2">ปี:</span>
-                    <select id="filter-year" onchange="runAnalysis()" class="bg-white border-none rounded-md text-[11px] font-bold p-1 px-3 shadow-sm outline-none cursor-pointer">
-                        <option value="2026">2026</option>
-                        <option value="2025">2025</option>
-                        <option value="2024">2024</option>
-                        <option value="ทั้งหมด">ทั้งหมด</option>
-                    </select>
-                </div>
-                <div class="flex items-center gap-2 bg-slate-50 p-1 rounded-lg border border-slate-100">
-                    <span class="text-[8px] font-black uppercase text-slate-400 px-2">เดือน:</span>
-                    <select id="filter-month" onchange="runAnalysis()" class="bg-white border-none rounded-md text-[11px] font-bold p-1 px-3 shadow-sm outline-none cursor-pointer">
-                        <option value="ALL">ทั้งหมด</option>
-                        <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option>
-                        <option value="03">มีนาคม</option><option value="04">เมษายน</option>
-                        <option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option>
-                        <option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option>
-                        <option value="09">กันยายน</option><option value="10">ตุลาคม</option>
-                        <option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
-                    </select>
-                </div>
-                <div class="flex items-center gap-2 bg-slate-50 p-1 rounded-lg border border-slate-100">
-                    <span class="text-[8px] font-black uppercase text-slate-400 px-2">แผนก:</span>
-                    <select id="filter-dept" onchange="runAnalysis()" class="bg-white border-none rounded-md text-[11px] font-bold p-1 px-3 shadow-sm outline-none max-w-[200px] cursor-pointer">
-                        <option value="ทั้งหมด">ทั้งหมด</option>
-                    </select>
-                </div>
-            </div>
-            <div class="relative">
-                <i data-lucide="search" class="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-300"></i>
-                <input id="search-term" oninput="runAnalysis()" type="text" placeholder="ค้นหาพนักงาน..." class="bg-slate-50 border-none rounded-xl text-[11px] font-bold p-2 pl-9 w-48 focus:ring-1 focus:ring-red-500 outline-none transition-all">
-            </div>
-        </div>
-
         <div id="content-overview" class="space-y-6">
-            
-            <!-- Compact KPI Row -->
+            <!-- Filters Area -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center gap-3 print:hidden">
+                <div class="flex flex-wrap gap-3 items-center flex-1">
+                    <div class="flex items-center gap-2 bg-slate-50 p-1 rounded-lg border border-slate-100">
+                        <span class="text-[8px] font-black uppercase text-slate-400 px-2">ปี:</span>
+                        <select id="filter-year" onchange="runAnalysis()" class="bg-white border-none rounded-md text-[11px] font-bold p-1 px-3 shadow-sm outline-none cursor-pointer">
+                            <option value="2026">2026</option>
+                            <option value="2025">2025</option>
+                            <option value="2024">2024</option>
+                            <option value="ทั้งหมด">ทั้งหมด</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 p-1 rounded-lg border border-slate-100">
+                        <span class="text-[8px] font-black uppercase text-slate-400 px-2">เดือน:</span>
+                        <select id="filter-month" onchange="runAnalysis()" class="bg-white border-none rounded-md text-[11px] font-bold p-1 px-3 shadow-sm outline-none cursor-pointer">
+                            <option value="ALL">ทั้งหมด</option>
+                            <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option>
+                            <option value="03">มีนาคม</option><option value="04">เมษายน</option>
+                            <option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option>
+                            <option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option>
+                            <option value="09">กันยายน</option><option value="10">ตุลาคม</option>
+                            <option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-50 p-1 rounded-lg border border-slate-100">
+                        <span class="text-[8px] font-black uppercase text-slate-400 px-2">แผนก:</span>
+                        <select id="filter-dept" onchange="runAnalysis()" class="bg-white border-none rounded-md text-[11px] font-bold p-1 px-3 shadow-sm outline-none max-w-[200px] cursor-pointer">
+                            <option value="ทั้งหมด">ทั้งหมด</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="relative">
+                    <i data-lucide="search" class="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-300"></i>
+                    <input id="search-term" oninput="runAnalysis()" type="text" placeholder="ค้นหาพนักงาน..." class="bg-slate-50 border-none rounded-xl text-[11px] font-bold p-2 pl-9 w-48 focus:ring-1 focus:ring-red-500 outline-none transition-all">
+                </div>
+            </div>
+
+            <!-- KPI Row -->
             <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
                 <div class="bg-white p-4 rounded-2xl shadow-sm kpi-card">
                     <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest italic mb-1 leading-none">ยอดบันทึกรวม</p>
@@ -156,6 +156,7 @@
 
             <!-- Summary Row -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Champion -->
                 <div class="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden flex flex-col justify-center animate-shine">
                     <div class="absolute top-0 right-0 p-4 opacity-10"><i data-lucide="trophy" class="w-24 h-24"></i></div>
                     <div class="relative z-10">
@@ -165,35 +166,21 @@
                         <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest italic leading-none">Total Hits: <span id="winner-hits" class="text-white text-lg ml-2">0</span></p>
                     </div>
                 </div>
-
-                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-center relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 p-4 opacity-5 text-red-600"><i data-lucide="sunrise" class="w-24 h-24"></i></div>
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-2 mb-4">
-                            <span id="early-month-label" class="px-2 py-0.5 bg-red-600 text-white text-[8px] font-black uppercase italic rounded-full leading-none">-</span>
-                            <span class="text-[8px] font-black text-slate-400 uppercase italic">Monthly Speed Star</span>
-                        </div>
-                        <h2 id="early-name" class="text-2xl font-black italic tracking-tighter uppercase mb-1 leading-none text-slate-800">-</h2>
-                        <p id="early-time" class="text-red-600 font-black text-[9px] uppercase tracking-widest italic flex items-center gap-1">
-                            <i data-lucide="clock" class="w-3 h-3"></i> <span>-</span>
-                        </p>
-                    </div>
-                </div>
-
-                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col h-full">
+                <!-- Pending -->
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col h-full lg:col-span-2">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-[10px] font-black text-slate-800 flex items-center gap-2 uppercase italic tracking-tight">
-                            <i data-lucide="user-minus" class="text-orange-600 w-3.5 h-3.5"></i> Pending Learners
+                            <i data-lucide="user-minus" class="text-orange-600 w-3.5 h-3.5"></i> Pending Learners (รายชื่อผู้ที่ยังไม่ได้กดบันทึก)
                         </h3>
                         <span id="pending-count-label" class="text-[8px] font-bold text-slate-300 uppercase italic">0 Persons</span>
                     </div>
-                    <div id="inactive-list-summary" class="space-y-1.5 overflow-visible">
-                        <!-- JS Injected -->
+                    <div id="inactive-list-summary" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 overflow-visible">
+                        <!-- JS -->
                     </div>
                 </div>
             </div>
 
-            <!-- Graphs Section -->
+            <!-- Graphs Row -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col">
                     <h3 class="text-xs font-black text-slate-800 flex items-center gap-2 uppercase italic tracking-tight mb-8">
@@ -201,18 +188,62 @@
                     </h3>
                     <div class="h-[320px]"><canvas id="learnerChart"></canvas></div>
                 </div>
-
                 <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col">
-                    <div class="flex items-center justify-between mb-8">
-                        <h3 class="text-xs font-black text-slate-800 flex items-center gap-2 uppercase italic tracking-tight">
-                            <i data-lucide="trending-up" class="text-blue-600 w-4 h-4"></i> Tendency (3-Year)
-                        </h3>
-                        <div class="flex gap-4">
-                            <div class="flex items-center gap-1.5 text-[8px] font-bold text-blue-600"><span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span> Current</div>
-                            <div class="flex items-center gap-1.5 text-[8px] font-bold text-red-500"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Prev</div>
-                        </div>
-                    </div>
+                    <h3 class="text-xs font-black text-slate-800 flex items-center gap-2 uppercase italic tracking-tight mb-8">
+                        <i data-lucide="trending-up" class="text-blue-600 w-4 h-4"></i> Tendency (3-Year Comparison)
+                    </h3>
                     <div class="h-[320px]"><canvas id="tendencyChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manage Data Tab Content -->
+        <div id="content-manage" class="hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Manual Add Member Form -->
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200">
+                    <h3 class="text-sm font-black text-slate-800 mb-6 uppercase italic tracking-tight flex items-center gap-2">
+                        <i data-lucide="user-plus" class="text-blue-600"></i> เพิ่มพนักงานใหม่ (Manual Fix)
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block tracking-widest">ชื่อพนักงาน</label>
+                            <input id="manual-name" type="text" placeholder="ระบุชื่อ-นามสกุล..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none focus:ring-1 focus:ring-blue-500 transition-all shadow-inner" />
+                        </div>
+                        <div>
+                            <label class="text-[9px] font-black text-slate-400 uppercase mb-1 block tracking-widest">แผนก</label>
+                            <input id="manual-dept" type="text" placeholder="ระบุแผนก..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none focus:ring-1 focus:ring-blue-500 transition-all shadow-inner" />
+                        </div>
+                        <button onclick="addManualMember()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 italic">
+                            + เพิ่มลงฐานข้อมูล Cloud
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Members List with Delete -->
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col h-[400px]">
+                    <h3 class="text-sm font-black text-slate-800 mb-6 uppercase italic tracking-tight flex items-center justify-between">
+                        <span>รายชื่อพนักงานทั้งหมด</span>
+                        <span id="manage-member-count" class="text-[10px] text-slate-300">0 ราย</span>
+                    </h3>
+                    <div id="manage-members-list" class="space-y-2 overflow-y-auto custom-scrollbar flex-1 pr-2">
+                        <!-- JS -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200">
+                <div class="flex items-center justify-between mb-8">
+                   <h3 class="text-sm font-black text-slate-800 uppercase italic tracking-tight">ล้างข้อมูล (System Clear)</h3>
+                </div>
+                <div class="p-6 bg-red-50 rounded-3xl border border-red-100 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div>
+                        <h4 class="text-red-600 font-black text-sm uppercase italic">ลบข้อมูล Cloud ทั้งหมด</h4>
+                        <p class="text-[10px] text-red-400 font-bold mt-1">คำเตือน: ข้อมูลรายชื่อและประวัติการเรียนจะถูกลบถาวร ไม่สามารถย้อนกลับได้</p>
+                    </div>
+                    <button onclick="clearData()" class="bg-red-600 text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-xl shadow-red-600/20 italic">
+                        <i data-lucide="trash-2" class="inline w-3 h-3 mr-2"></i> ลบฐานข้อมูลถาวร
+                    </button>
                 </div>
             </div>
         </div>
@@ -221,7 +252,7 @@
             <div class="bg-white p-12 rounded-[3rem] border border-slate-200 shadow-sm text-center">
                 <h3 class="text-2xl font-black italic tracking-tighter uppercase mb-12">Monthly Speed Stars History</h3>
                 <div id="earlybird-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- JS Injected -->
+                    <!-- JS -->
                 </div>
             </div>
         </div>
@@ -231,18 +262,18 @@
     <div id="import-modal" class="fixed inset-0 z-[100] hidden modal-overlay flex items-center justify-center p-6">
         <div class="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl p-10 border border-slate-200">
             <div class="flex items-center justify-between mb-8 border-b pb-6">
-                <h3 class="text-xl font-bold text-slate-800 italic uppercase">File Import</h3>
+                <h3 class="text-xl font-bold text-slate-800 italic uppercase">Manual File Update</h3>
                 <button onclick="toggleImportModal()" class="text-slate-300 hover:text-red-600"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-center">
                 <div onclick="document.getElementById('file-members').click()" class="bg-slate-50 p-8 rounded-3xl border-2 border-dashed border-slate-200 cursor-pointer group hover:border-red-500 hover:bg-white transition-all">
-                    <i data-lucide="users" class="w-10 h-10 mx-auto text-slate-300 group-hover:text-red-600 mb-4"></i>
-                    <p class="font-bold text-slate-700 text-xs italic uppercase">รายชื่อพนักงาน</p>
+                    <i data-lucide="user-plus" class="w-10 h-10 mx-auto text-slate-300 group-hover:text-red-600 mb-4"></i>
+                    <p class="font-bold text-slate-700 text-xs italic uppercase">1. รายชื่อพนักงาน</p>
                     <input type="file" id="file-members" class="hidden" accept=".xlsx,.xls,.csv" onchange="handleFile(event, 'members')">
                 </div>
                 <div onclick="document.getElementById('file-records').click()" class="bg-slate-50 p-8 rounded-3xl border-2 border-dashed border-slate-200 cursor-pointer group hover:border-red-500 hover:bg-white transition-all">
-                    <i data-lucide="history" class="w-10 h-10 mx-auto text-slate-300 group-hover:text-red-600 mb-4"></i>
-                    <p class="font-bold text-slate-700 text-xs italic uppercase">รายงานการเรียน</p>
+                    <i data-lucide="file-text" class="w-10 h-10 mx-auto text-slate-300 group-hover:text-red-600 mb-4"></i>
+                    <p class="font-bold text-slate-700 text-xs italic uppercase">2. รายงานการเรียน</p>
                     <input type="file" id="file-records" class="hidden" accept=".xlsx,.xls,.csv" onchange="handleFile(event, 'records')">
                 </div>
             </div>
@@ -252,10 +283,11 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Config
         const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'scg-heim-selflearning';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'scg-heim-v1-6-2';
         
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -270,7 +302,6 @@
         const MONTH_NAMES = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
         const MONTH_SHORT = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
         
-        // Paths for Cloud Storage (Data Chunking Protocol)
         const CONFIG_PATH = ['artifacts', appId, 'public', 'data', 'config', 'main'];
         const MEMBERS_PATH = ['artifacts', appId, 'public', 'data', 'members_data', 'primary'];
         const RECORDS_META_PATH = ['artifacts', appId, 'public', 'data', 'records_meta', 'info'];
@@ -281,28 +312,23 @@
             if (type === 'syncing') {
                 dot.className = 'w-2 h-2 rounded-full bg-yellow-400 syncing-active';
                 text.innerText = 'Syncing...';
-                text.className = 'text-[9px] font-black text-yellow-600 uppercase tracking-widest italic';
             } else if (type === 'online') {
                 dot.className = 'w-2 h-2 rounded-full bg-green-500';
-                text.innerText = 'Online - Auto Sync';
-                text.className = 'text-[9px] font-black text-green-600 uppercase tracking-widest italic';
+                text.innerText = 'Cloud: Connected';
             } else {
                 dot.className = 'w-2 h-2 rounded-full bg-slate-300';
                 text.innerText = 'Offline Mode';
-                text.className = 'text-[9px] font-black text-slate-400 uppercase tracking-widest italic';
             }
         }
 
         window.onload = async function() {
             lucide.createIcons();
-            
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);
                 }
-
                 onAuthStateChanged(auth, async (user) => {
                     if (user) {
                         currentUser = user;
@@ -313,92 +339,99 @@
                         setSyncStatus('offline');
                     }
                 });
-            } catch (err) { console.error("Auth Init Failed", err); }
+            } catch (err) { console.error("Auth Failed", err); }
         };
 
         async function syncFromCloud() {
             try {
-                // 1. Load Settings
                 const configSnap = await getDoc(doc(db, ...CONFIG_PATH));
                 if (configSnap.exists()) {
                     sourcePath = configSnap.data().sourcePath || '';
                     document.getElementById('main-source-path').value = sourcePath;
                 }
-
-                // 2. Load Members
                 const membersSnap = await getDoc(doc(db, ...MEMBERS_PATH));
                 if (membersSnap.exists()) {
                     members = JSON.parse(membersSnap.data().data || '[]');
                 }
-
-                // 3. Load Records (Chunk Assembly)
                 const metaSnap = await getDoc(doc(db, ...RECORDS_META_PATH));
                 if (metaSnap.exists()) {
                     const chunkCount = metaSnap.data().count || 0;
                     let fullRecordsStr = "";
-                    
-                    // Fetch all chunks in order
                     for (let i = 0; i < chunkCount; i++) {
                         const chunkSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'records_chunks', `chunk_${i}`));
-                        if (chunkSnap.exists()) {
-                            fullRecordsStr += chunkSnap.data().content;
-                        }
+                        if (chunkSnap.exists()) { fullRecordsStr += chunkSnap.data().content; }
                     }
-                    
-                    if (fullRecordsStr) {
-                        records = JSON.parse(fullRecordsStr);
-                    }
+                    if (fullRecordsStr) { records = JSON.parse(fullRecordsStr); }
                 }
-
                 populateDepts();
                 runAnalysis();
-            } catch (e) {
-                console.error("Sync Load Failed", e);
-            }
+                renderManageData();
+            } catch (e) { console.error("Sync Load Failed", e); }
         }
 
         async function autoSave() {
             if (!currentUser) return;
             setSyncStatus('syncing');
             try {
-                // A. Save Config & Path
-                await setDoc(doc(db, ...CONFIG_PATH), {
-                    sourcePath: sourcePath,
-                    lastUpdate: new Date().toISOString()
-                });
-
-                // B. Save Members (Chunking if needed, but usually members < 1MB)
-                await setDoc(doc(db, ...MEMBERS_PATH), {
-                    data: JSON.stringify(members)
-                });
-
-                // C. Save Records (Chunking Protocol - 800KB per chunk)
+                await setDoc(doc(db, ...CONFIG_PATH), { sourcePath: sourcePath, lastUpdate: new Date().toISOString() });
+                await setDoc(doc(db, ...MEMBERS_PATH), { data: JSON.stringify(members) });
                 const recordsStr = JSON.stringify(records);
-                const chunkSize = 800000; // ~800KB safely under 1MB limit
+                const chunkSize = 800000;
                 const numChunks = Math.ceil(recordsStr.length / chunkSize);
-                
-                // Save meta info
                 await setDoc(doc(db, ...RECORDS_META_PATH), { count: numChunks });
-
-                // Sequential upload to avoid hitting burst limits
                 for (let i = 0; i < numChunks; i++) {
                     const chunkContent = recordsStr.substring(i * chunkSize, (i + 1) * chunkSize);
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'records_chunks', `chunk_${i}`), {
-                        content: chunkContent
-                    });
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'records_chunks', `chunk_${i}`), { content: chunkContent });
                 }
-
                 setSyncStatus('online');
-            } catch (err) {
-                console.error("AutoSave Failed", err);
-                setSyncStatus('offline');
-            }
+            } catch (err) { console.error("AutoSave Failed", err); }
         }
 
         window.updatePath = function(val) {
             sourcePath = val;
             autoSave();
         };
+
+        window.addManualMember = async function() {
+            const name = document.getElementById('manual-name').value.trim();
+            const dept = document.getElementById('manual-dept').value.trim();
+            if (!name || !dept) return alert("กรุณาระบุชื่อและแผนก");
+            members.push({ name, dept });
+            document.getElementById('manual-name').value = "";
+            document.getElementById('manual-dept').value = "";
+            await autoSave();
+            populateDepts();
+            runAnalysis();
+            renderManageData();
+        };
+
+        window.deleteMember = async function(index) {
+            if(!confirm("คุณต้องการลบรายชื่อพนักงานนี้ใช่หรือไม่?")) return;
+            members.splice(index, 1);
+            await autoSave();
+            populateDepts();
+            runAnalysis();
+            renderManageData();
+        };
+
+        function renderManageData() {
+            const list = document.getElementById('manage-members-list');
+            const count = document.getElementById('manage-member-count');
+            if(!list) return;
+            count.innerText = `${members.length} ราย`;
+            list.innerHTML = members.map((m, i) => `
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white transition-all">
+                    <div class="truncate pr-4">
+                        <p class="text-xs font-black text-slate-800 uppercase italic leading-none mb-1">${m.name}</p>
+                        <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest">${m.dept}</p>
+                    </div>
+                    <button onclick="deleteMember(${i})" class="text-slate-300 hover:text-red-600 p-2">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `).join('') || '<p class="text-[10px] text-slate-300 italic text-center py-10">ไม่มีข้อมูลพนักงาน</p>';
+            lucide.createIcons();
+        }
 
         window.handleFile = function(event, type) {
             const file = event.target.files[0];
@@ -407,14 +440,20 @@
             reader.onload = async function(e) {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, {type: 'array'});
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const json = XLSX.utils.sheet_to_json(sheet);
-                
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
                 if(type === 'members') {
-                    members = json.map(m => ({
+                    const newMembers = json.map(m => ({
                         name: String(m.Name || m.name || m['ชื่อพนักงาน'] || m['ชื่อ'] || "Unknown"),
                         dept: String(m.Department || m.department || m['แผนก'] || "ไม่ระบุ")
                     })).filter(m => m.name !== "Unknown");
+                    members = [...members, ...newMembers];
+                    // Remove Duplicates by name
+                    const uniqueNames = new Set();
+                    members = members.filter(m => {
+                        if(uniqueNames.has(m.name)) return false;
+                        uniqueNames.add(m.name);
+                        return true;
+                    });
                 } else {
                     records = json.map(r => ({
                         Name: String(r.Name || r.name || r['ชื่อพนักงาน'] || "Unknown"),
@@ -422,10 +461,10 @@
                         CreatedDateTime: String(r.CreatedDateTime || r.createddatetime || r['วันที่บันทึก'] || "")
                     }));
                 }
-                
                 await autoSave();
                 populateDepts();
                 runAnalysis();
+                renderManageData();
                 window.toggleImportModal();
             };
             reader.readAsArrayBuffer(file);
@@ -433,17 +472,10 @@
 
         window.clearData = async function() {
             if(confirm("คำเตือน: ล้างข้อมูลทั้งหมดออกจาก Cloud?")) {
-                setSyncStatus('syncing');
-                try {
-                    // Delete meta and config
-                    await deleteDoc(doc(db, ...CONFIG_PATH));
-                    await deleteDoc(doc(db, ...MEMBERS_PATH));
-                    
-                    // Note: In Firestore, we should ideally delete all chunks, 
-                    // but since we overwrite based on meta count, it's manageable.
-                    await deleteDoc(doc(db, ...RECORDS_META_PATH));
-                    location.reload();
-                } catch(e) { setSyncStatus('offline'); }
+                await deleteDoc(doc(db, ...CONFIG_PATH));
+                await deleteDoc(doc(db, ...MEMBERS_PATH));
+                await deleteDoc(doc(db, ...RECORDS_META_PATH));
+                location.reload();
             }
         }
 
@@ -463,10 +495,15 @@
         window.switchTab = function(tab) {
             document.getElementById('content-overview').classList.toggle('hidden', tab !== 'overview');
             document.getElementById('content-earlybird').classList.toggle('hidden', tab !== 'earlybird');
+            document.getElementById('content-manage').classList.toggle('hidden', tab !== 'manage');
+            
             document.getElementById('tab-overview').className = `flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${tab === 'overview' ? 'tab-active' : 'text-slate-500'}`;
             document.getElementById('tab-earlybird').className = `flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${tab === 'earlybird' ? 'tab-active' : 'text-slate-500'}`;
+            document.getElementById('tab-manage').className = `flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${tab === 'manage' ? 'tab-active' : 'text-slate-500'}`;
+            
             if(tab === 'overview') runAnalysis();
-            else renderEarlyBirds();
+            else if(tab === 'earlybird') renderEarlyBirds();
+            else renderManageData();
         }
 
         function populateDepts() {
@@ -480,7 +517,6 @@
             const mN = document.getElementById('filter-month').value;
             const dp = document.getElementById('filter-dept').value;
             const sT = document.getElementById('search-term').value.toLowerCase();
-
             const filtered = records.filter(r => {
                 const dt = String(r.CreatedDateTime);
                 const matchY = y === 'ทั้งหมด' || dt.startsWith(y);
@@ -489,46 +525,37 @@
                 const matchS = r.Name.toLowerCase().includes(sT);
                 return matchY && matchM && matchD && matchS;
             });
-
             const targetPool = members.filter(m => dp === 'ทั้งหมด' || m.dept === dp);
             const activeSet = new Set(filtered.map(r => r.Name));
             const activeCount = targetPool.filter(m => activeSet.has(m.name)).length;
             const inactiveCount = targetPool.length - activeCount;
-
+            
             document.getElementById('stat-total').innerText = filtered.length.toLocaleString();
             document.getElementById('stat-active').innerText = activeCount.toLocaleString();
             document.getElementById('stat-avg').innerText = (activeCount > 0 ? filtered.length / activeCount : 0).toFixed(1);
             document.getElementById('stat-rate').innerText = (targetPool.length > 0 ? (activeCount / targetPool.length) * 100 : 0).toFixed(1) + "%";
             document.getElementById('stat-inactive').innerText = inactiveCount.toLocaleString();
             document.getElementById('pending-count-label').innerText = inactiveCount.toLocaleString() + " Persons";
-
+            
             const userCounts = {};
             filtered.forEach(r => userCounts[r.Name] = (userCounts[r.Name] || 0) + 1);
             const sorted = Object.entries(userCounts).map(([name, count]) => {
                 const m = members.find(x => x.name === name);
                 return { name, count, dept: m ? m.dept : "ไม่ระบุ" };
             }).sort((a,b) => b.count - a.count);
-
+            
             const winner = sorted[0];
             document.getElementById('winner-name').innerText = winner ? winner.name : "-";
             document.getElementById('winner-dept').innerText = winner ? winner.dept : "-";
             document.getElementById('winner-hits').innerText = winner ? winner.count.toLocaleString() : "0";
-
-            const first = filtered.sort((a,b) => new Date(a.CreatedDateTime) - new Date(b.CreatedDateTime))[0];
-            if(first) {
-                const midx = parseInt(String(first.CreatedDateTime).split('-')[1]) - 1;
-                document.getElementById('early-month-label').innerText = MONTH_NAMES[midx];
-                document.getElementById('early-name').innerText = first.Name;
-                document.getElementById('early-time').querySelector('span').innerText = `Date: ${first.CreatedDateTime || "-"}`;
-            }
-
+            
             const pending = targetPool.filter(m => !activeSet.has(m.name));
             document.getElementById('inactive-list-summary').innerHTML = pending.length > 0 ? pending.map(m => `
-                <div class="flex items-center justify-between p-1.5 bg-slate-50 rounded-lg border border-slate-100">
-                    <span class="text-[9px] font-bold text-slate-500 truncate w-32">${m.name}</span>
+                <div class="flex items-center justify-between p-2 bg-slate-50 rounded-xl border border-slate-100 transition-all hover:bg-white hover:shadow-sm">
+                    <span class="text-[9px] font-bold text-slate-500 truncate w-24">${m.name}</span>
                     <span class="text-[7px] bg-slate-200 text-slate-400 px-1.5 py-0.5 rounded uppercase font-black italic">Pending</span>
-                </div>`).join('') : '<p class="text-[9px] font-black italic opacity-20 text-center py-4 uppercase">All Active!</p>';
-
+                </div>`).join('') : '<p class="text-[9px] font-black italic opacity-20 text-center py-4 uppercase col-span-full">All Active!</p>';
+            
             renderCharts(sorted.slice(0, 10), y);
             lucide.createIcons();
         }
@@ -551,11 +578,9 @@
                     scales: { x: { display: false }, y: { grid: { display: false }, ticks: { font: { size: 9, weight: 'bold' }, color: '#64748b' } } }
                 }
             });
-
             const y1 = yr === 'ทั้งหมด' ? '2026' : yr;
             const y2 = String(parseInt(y1) - 1);
             const getData = (yVal) => MONTH_SHORT.map((_, i) => records.filter(r => String(r.CreatedDateTime).startsWith(yVal) && String(r.CreatedDateTime).includes(`-${String(i+1).padStart(2,'0')}-`)).length);
-            
             const ctxT = document.getElementById('tendencyChart');
             if(tendencyChart) tendencyChart.destroy();
             tendencyChart = new Chart(ctxT, {
@@ -575,7 +600,7 @@
             document.getElementById('earlybird-grid').innerHTML = MONTH_NAMES.map((m, i) => {
                 const mon = records.filter(r => String(r.CreatedDateTime).startsWith(y) && String(r.CreatedDateTime).includes(`-${String(i+1).padStart(2,'0')}-`)).sort((a,b) => new Date(a.CreatedDateTime) - new Date(b.CreatedDateTime));
                 const top = mon[0] || { Name: '-', CreatedDateTime: '-' };
-                return `<div class="p-6 rounded-3xl border border-slate-100 bg-white ${top.Name !== '-' ? 'shadow-sm' : 'opacity-40'} text-center"><span class="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[8px] font-black uppercase mb-4 inline-block leading-none">${m}</span><h4 class="text-lg font-black text-slate-800 truncate uppercase">${top.Name}</h4><p class="text-[9px] text-red-600 font-bold italic">${top.CreatedDateTime || '-'}</p></div>`;
+                return `<div class="p-6 rounded-3xl border border-slate-100 bg-white ${top.Name !== '-' ? 'shadow-sm shadow-red-100' : 'opacity-40'} text-center transition-all hover:scale-105"><span class="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[8px] font-black uppercase mb-4 inline-block leading-none">${m}</span><h4 class="text-lg font-black text-slate-800 truncate uppercase tracking-tighter">${top.Name}</h4><p class="text-[9px] text-red-600 font-bold italic">${top.CreatedDateTime || '-'}</p></div>`;
             }).join('');
             lucide.createIcons();
         }
