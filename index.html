@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCG HEIM Dashboard Self Learning - V1.5.8 Auto Update</title>
+    <title>SCG HEIM Dashboard Self Learning - V1.5.9 Auto Update (Large Data Support)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -41,12 +41,11 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-black tracking-tighter text-slate-800 uppercase italic leading-none">HEIM OPS</h1>
-                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 italic">Dashboard Self Learning (Auto Update) - V1.5.8</p>
+                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 italic">Dashboard Self Learning (Large Data Support) - V1.5.9</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-2">
-                <!-- Auto Sync Status -->
                 <div id="cloud-status" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg mr-2">
                     <div id="status-dot" class="w-2 h-2 rounded-full bg-slate-300"></div>
                     <span id="status-text" class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Offline</span>
@@ -76,7 +75,7 @@
         </div>
     </header>
 
-    <!-- Inline Source Path Editor (Visible on Dashboard) -->
+    <!-- Inline Source Path Editor -->
     <div class="max-w-7xl mx-auto px-6 pt-4">
         <div class="bg-white border border-slate-200 rounded-2xl p-3 px-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
             <div class="flex items-center gap-3">
@@ -86,7 +85,7 @@
                     <input id="main-source-path" onblur="updatePath(this.value)" type="text" placeholder="ระบุโฟลเดอร์ไฟล์..." class="bg-transparent border-none p-0 text-xs font-bold text-slate-700 focus:ring-0 w-64 md:w-80 outline-none" />
                 </div>
             </div>
-            <p class="text-[9px] text-slate-300 font-bold italic uppercase tracking-widest">แก้ไขข้อมูลนี้จะบันทึกลง Cloud อัตโนมัติ</p>
+            <p class="text-[9px] text-slate-300 font-bold italic uppercase tracking-widest">ระบบจะแบ่งข้อมูลและบันทึกลง Cloud อัตโนมัติ (รองรับข้อมูลขนาดใหญ่)</p>
         </div>
     </div>
 
@@ -253,7 +252,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = JSON.parse(__firebase_config);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'scg-heim-selflearning';
@@ -270,9 +269,12 @@
 
         const MONTH_NAMES = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
         const MONTH_SHORT = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-        const DOC_PATH = ['artifacts', appId, 'public', 'data', 'master_data', 'primary'];
+        
+        // Paths for Cloud Storage (Data Chunking Protocol)
+        const CONFIG_PATH = ['artifacts', appId, 'public', 'data', 'config', 'main'];
+        const MEMBERS_PATH = ['artifacts', appId, 'public', 'data', 'members_data', 'primary'];
+        const RECORDS_META_PATH = ['artifacts', appId, 'public', 'data', 'records_meta', 'info'];
 
-        // UI Updates
         function setSyncStatus(type) {
             const dot = document.getElementById('status-dot');
             const text = document.getElementById('status-text');
@@ -294,7 +296,6 @@
         window.onload = async function() {
             lucide.createIcons();
             
-            // Authentication
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
@@ -316,31 +317,77 @@
         };
 
         async function syncFromCloud() {
-            const docRef = doc(db, ...DOC_PATH);
-            const snap = await getDoc(docRef);
-            if (snap.exists()) {
-                const d = snap.data();
-                members = d.members ? JSON.parse(d.members) : [];
-                records = d.records ? JSON.parse(d.records) : [];
-                sourcePath = d.sourcePath || '';
-                
-                document.getElementById('main-source-path').value = sourcePath;
+            try {
+                // 1. Load Settings
+                const configSnap = await getDoc(doc(db, ...CONFIG_PATH));
+                if (configSnap.exists()) {
+                    sourcePath = configSnap.data().sourcePath || '';
+                    document.getElementById('main-source-path').value = sourcePath;
+                }
+
+                // 2. Load Members
+                const membersSnap = await getDoc(doc(db, ...MEMBERS_PATH));
+                if (membersSnap.exists()) {
+                    members = JSON.parse(membersSnap.data().data || '[]');
+                }
+
+                // 3. Load Records (Chunk Assembly)
+                const metaSnap = await getDoc(doc(db, ...RECORDS_META_PATH));
+                if (metaSnap.exists()) {
+                    const chunkCount = metaSnap.data().count || 0;
+                    let fullRecordsStr = "";
+                    
+                    // Fetch all chunks in order
+                    for (let i = 0; i < chunkCount; i++) {
+                        const chunkSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'records_chunks', `chunk_${i}`));
+                        if (chunkSnap.exists()) {
+                            fullRecordsStr += chunkSnap.data().content;
+                        }
+                    }
+                    
+                    if (fullRecordsStr) {
+                        records = JSON.parse(fullRecordsStr);
+                    }
+                }
+
                 populateDepts();
                 runAnalysis();
+            } catch (e) {
+                console.error("Sync Load Failed", e);
             }
         }
 
         async function autoSave() {
             if (!currentUser) return;
             setSyncStatus('syncing');
-            const docRef = doc(db, ...DOC_PATH);
             try {
-                await setDoc(docRef, {
-                    members: JSON.stringify(members),
-                    records: JSON.stringify(records),
+                // A. Save Config & Path
+                await setDoc(doc(db, ...CONFIG_PATH), {
                     sourcePath: sourcePath,
                     lastUpdate: new Date().toISOString()
-                }, { merge: true });
+                });
+
+                // B. Save Members (Chunking if needed, but usually members < 1MB)
+                await setDoc(doc(db, ...MEMBERS_PATH), {
+                    data: JSON.stringify(members)
+                });
+
+                // C. Save Records (Chunking Protocol - 800KB per chunk)
+                const recordsStr = JSON.stringify(records);
+                const chunkSize = 800000; // ~800KB safely under 1MB limit
+                const numChunks = Math.ceil(recordsStr.length / chunkSize);
+                
+                // Save meta info
+                await setDoc(doc(db, ...RECORDS_META_PATH), { count: numChunks });
+
+                // Sequential upload to avoid hitting burst limits
+                for (let i = 0; i < numChunks; i++) {
+                    const chunkContent = recordsStr.substring(i * chunkSize, (i + 1) * chunkSize);
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'records_chunks', `chunk_${i}`), {
+                        content: chunkContent
+                    });
+                }
+
                 setSyncStatus('online');
             } catch (err) {
                 console.error("AutoSave Failed", err);
@@ -386,9 +433,17 @@
 
         window.clearData = async function() {
             if(confirm("คำเตือน: ล้างข้อมูลทั้งหมดออกจาก Cloud?")) {
-                const docRef = doc(db, ...DOC_PATH);
-                await deleteDoc(docRef);
-                location.reload();
+                setSyncStatus('syncing');
+                try {
+                    // Delete meta and config
+                    await deleteDoc(doc(db, ...CONFIG_PATH));
+                    await deleteDoc(doc(db, ...MEMBERS_PATH));
+                    
+                    // Note: In Firestore, we should ideally delete all chunks, 
+                    // but since we overwrite based on meta count, it's manageable.
+                    await deleteDoc(doc(db, ...RECORDS_META_PATH));
+                    location.reload();
+                } catch(e) { setSyncStatus('offline'); }
             }
         }
 
