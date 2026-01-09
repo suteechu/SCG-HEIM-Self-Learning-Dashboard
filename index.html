@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCG HEIM dashboard Self Learning - V1.5 Persistence</title>
+    <title>SCG HEIM dashboard Self Learning - V1.5.2 Stable Cloud</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -39,6 +39,7 @@
         <div class="flex flex-col items-center">
             <div class="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-4"></div>
             <p class="text-xs font-black uppercase tracking-widest text-slate-500 italic">Syncing Data with Cloud...</p>
+            <p id="loading-error" class="text-[10px] text-red-500 font-bold mt-2 hidden">การเชื่อมต่อล่าช้า กำลังเข้าสู่โหมดออฟไลน์...</p>
         </div>
     </div>
 
@@ -51,14 +52,14 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-black tracking-tighter text-slate-800 uppercase italic leading-none">HEIM OPS</h1>
-                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 italic">Dashboard Self Learning (Cloud) - V1.5</p>
+                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 italic">Dashboard Self Learning (Cloud) - V1.5.2</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-2">
                 <div id="cloud-status" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg mr-2">
                     <div class="w-2 h-2 rounded-full bg-slate-300"></div>
-                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Offline</span>
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Checking...</span>
                 </div>
 
                 <div class="bg-slate-100 p-1 rounded-lg flex">
@@ -247,6 +248,9 @@
                     <input type="file" id="file-records" class="hidden" accept=".xlsx,.xls,.csv" onchange="handleFile(event, 'records')">
                 </div>
             </div>
+            <div class="mt-6 pt-4 border-t text-center">
+               <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">แนะนำ: ดาวน์โหลดไฟล์รายงานจากระบบ แล้วนำมาอัปโหลดที่นี่</p>
+            </div>
         </div>
     </div>
 
@@ -271,13 +275,26 @@
         const MONTH_NAMES = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
         const MONTH_SHORT = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
 
-        // FIXED PATH SEGMENTS (Even segments required for doc() - Segment Count: 6)
+        // Path segments must be even: artifacts (1) / appId (2) / public (3) / data (4) / master_data (5) / primary (6)
         const DATA_DOC_PATH = ['artifacts', appId, 'public', 'data', 'master_data', 'primary'];
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.remove('flex');
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
 
         window.onload = async function() {
             lucide.createIcons();
+            document.getElementById('loading-overlay').classList.remove('hidden');
             document.getElementById('loading-overlay').classList.add('flex');
             
+            // Safety timeout to prevent infinite hang
+            const loadingTimeout = setTimeout(() => {
+                const errorMsg = document.getElementById('loading-error');
+                if (errorMsg) errorMsg.classList.remove('hidden');
+                setTimeout(hideLoading, 3000);
+            }, 8000);
+
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
@@ -286,18 +303,26 @@
                 }
             } catch (err) {
                 console.error("Auth failed:", err);
+                hideLoading();
+                clearTimeout(loadingTimeout);
             }
 
             onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    currentUser = user;
-                    updateCloudStatus(true);
-                    await syncFromCloud();
-                } else {
-                    updateCloudStatus(false);
+                try {
+                    if (user) {
+                        currentUser = user;
+                        updateCloudStatus(true);
+                        await syncFromCloud();
+                    } else {
+                        updateCloudStatus(false);
+                        currentUser = null;
+                    }
+                } catch (err) {
+                    console.error("Sync process failed:", err);
+                } finally {
+                    hideLoading();
+                    clearTimeout(loadingTimeout);
                 }
-                document.getElementById('loading-overlay').classList.remove('flex');
-                document.getElementById('loading-overlay').classList.add('hidden');
             });
         };
 
@@ -311,7 +336,8 @@
                 text.className = 'text-[9px] font-black text-green-600 uppercase tracking-widest italic';
             } else {
                 dot.className = 'w-2 h-2 rounded-full bg-slate-300';
-                text.innerText = 'Offline';
+                text.innerText = 'Offline Mode';
+                text.className = 'text-[9px] font-black text-slate-400 uppercase tracking-widest italic';
             }
         }
 
@@ -375,9 +401,7 @@
                 document.getElementById('loading-overlay').classList.add('flex');
                 
                 await saveToCloud();
-                
-                document.getElementById('loading-overlay').classList.remove('flex');
-                document.getElementById('loading-overlay').classList.add('hidden');
+                hideLoading();
                 
                 populateDepts();
                 runAnalysis();
