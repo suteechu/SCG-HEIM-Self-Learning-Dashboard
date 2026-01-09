@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCG HEIM Dashboard Self Learning - V1.6.6 Stable Verified</title>
+    <title>SCG HEIM Dashboard Self Learning - V1.6.7 Adjusted Dept</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -42,7 +42,7 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-black tracking-tighter text-slate-800 uppercase italic leading-none">HEIM OPS</h1>
-                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 italic">Dashboard Self Learning - V1.6.6 Verified</p>
+                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 italic">Dashboard Self Learning - V1.6.7 Verified</p>
                 </div>
             </div>
 
@@ -273,6 +273,31 @@
 
         const MONTH_NAMES = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
         const MONTH_SHORT = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค. "];
+        
+        // --- Department Helper & Order ---
+        const simplifyDept = (dept) => {
+            if (!dept) return "ไม่ระบุ";
+            let d = dept.toString()
+                .replace("SCG HEIM Factory/", "")
+                .replace("Division//", "")
+                .replace("Department/", "")
+                .split('/')[0]
+                .trim();
+            // Map specifically requested long name back to its standard "initial" name if applicable
+            if (d.includes("Product Development and Supply Chain")) return "Construction and Supply Chain";
+            return d;
+        };
+
+        const INITIAL_DEPTS = [
+            "ทั้งหมด",
+            "Production and Maintenance",
+            "Design Department",
+            "Construction and Supply Chain",
+            "Sales and Customer Service",
+            "Human Resource",
+            "Quality Control",
+            "Managing Director"
+        ];
 
         window.onload = function() {
             lucide.createIcons();
@@ -305,7 +330,7 @@
             const name = document.getElementById('manual-name').value.trim();
             const dept = document.getElementById('manual-dept').value.trim();
             if (!name || !dept) return alert("ระบุข้อมูลให้ครบถ้วน");
-            members.push({ name, dept });
+            members.push({ name: name, dept: simplifyDept(dept) });
             document.getElementById('manual-name').value = "";
             document.getElementById('manual-dept').value = "";
             saveLocalData();
@@ -349,15 +374,14 @@
                 if(type === 'members') {
                     const newOnes = json.map(m => ({
                         name: String(m.Name || m.name || m['ชื่อพนักงาน'] || m['ชื่อ'] || "Unknown"),
-                        dept: String(m.Department || m.department || m['แผนก'] || "ไม่ระบุ")
+                        dept: simplifyDept(m.Department || m.department || m['แผนก'] || "ไม่ระบุ")
                     })).filter(m => m.name !== "Unknown");
-                    // Unique names only
                     const existing = new Set(members.map(x => x.name));
                     newOnes.forEach(n => { if(!existing.has(n.name)) members.push(n); });
                 } else {
                     records = json.map(r => ({
                         Name: String(r.Name || r.name || r['ชื่อพนักงาน'] || "Unknown"),
-                        Department: String(r.Department || r.department || r['แผนก'] || "ไม่ระบุ"),
+                        Department: simplifyDept(r.Department || r.department || r['แผนก'] || "ไม่ระบุ"),
                         CreatedDateTime: String(r.CreatedDateTime || r.createddatetime || r['วันที่บันทึก'] || "")
                     }));
                 }
@@ -399,9 +423,17 @@
         }
 
         function populateDepts() {
-            const all = ["ทั้งหมด", ...new Set([...members.map(m => m.dept), ...records.map(r => r.Department)])].sort();
+            // Get dynamically found depts
+            const dynamicDepts = new Set([...members.map(m => simplifyDept(m.dept)), ...records.map(r => simplifyDept(r.Department))]);
+            
+            // Start with INITIAL order, then append any dynamic ones not in the initial list
+            const finalOrder = [...INITIAL_DEPTS];
+            dynamicDepts.forEach(d => {
+                if (!finalOrder.includes(d)) finalOrder.push(d);
+            });
+
             const sel = document.getElementById('filter-dept');
-            if(sel) sel.innerHTML = all.map(d => `<option value="${d}">${d}</option>`).join('');
+            if(sel) sel.innerHTML = finalOrder.map(d => `<option value="${d}">${d}</option>`).join('');
         }
 
         window.runAnalysis = function() {
@@ -412,14 +444,18 @@
             
             const filtered = records.filter(r => {
                 const dt = String(r.CreatedDateTime);
+                const rDept = simplifyDept(r.Department);
                 const matchY = y === 'ทั้งหมด' || dt.startsWith(y);
                 const matchM = mN === 'ALL' || dt.includes(`-${mN}-`);
-                const matchD = dp === 'ทั้งหมด' || r.Department === dp;
+                const matchD = dp === 'ทั้งหมด' || rDept === dp;
                 const matchS = r.Name.toLowerCase().includes(sT);
                 return matchY && matchM && matchD && matchS;
             });
 
-            const targetPool = members.filter(m => dp === 'ทั้งหมด' || m.dept === dp);
+            const targetPool = members.filter(m => {
+                const mDept = simplifyDept(m.dept);
+                return dp === 'ทั้งหมด' || mDept === dp;
+            });
             const activeSet = new Set(filtered.map(r => r.Name));
             const activeCount = targetPool.filter(m => activeSet.has(m.name)).length;
             const inactiveCount = targetPool.length - activeCount;
@@ -435,7 +471,7 @@
             filtered.forEach(r => userCounts[r.Name] = (userCounts[r.Name] || 0) + 1);
             const sorted = Object.entries(userCounts).map(([name, count]) => {
                 const m = members.find(x => x.name === name);
-                return { name, count, dept: m ? m.dept : "ไม่ระบุ" };
+                return { name, count, dept: m ? simplifyDept(m.dept) : "ไม่ระบุ" };
             }).sort((a,b) => b.count - a.count);
 
             document.getElementById('winner-name').innerText = sorted[0] ? sorted[0].name : "-";
@@ -497,9 +533,10 @@
                 const monthNum = String(i + 1).padStart(2, '0');
                 const monRecords = records.filter(r => {
                     const dt = String(r.CreatedDateTime);
+                    const rDept = simplifyDept(r.Department);
                     const matchY = yr === 'ทั้งหมด' || dt.startsWith(yr);
                     const matchM = dt.includes(`-${monthNum}-`);
-                    const matchD = dp === 'ทั้งหมด' || r.Department === dp;
+                    const matchD = dp === 'ทั้งหมด' || rDept === dp;
                     return matchY && matchM && matchD;
                 }).sort((a, b) => new Date(a.CreatedDateTime) - new Date(b.CreatedDateTime));
 
@@ -508,7 +545,7 @@
                     <div class="p-8 rounded-[2.5rem] border border-slate-100 bg-white shadow-sm transition-all hover:scale-[1.02] ${top.Name === '-' ? 'opacity-40' : 'border-red-50 shadow-red-50'}">
                         <span class="px-4 py-1 bg-slate-100 text-slate-500 rounded-full text-[9px] font-black uppercase mb-6 inline-block tracking-widest leading-none">${MONTH_NAMES[i]}</span>
                         <h4 class="text-xl font-black text-slate-800 truncate uppercase tracking-tighter mb-1 italic">${top.Name}</h4>
-                        <p class="text-[9px] text-slate-400 font-bold uppercase truncate mb-6">${top.Department !== '-' ? top.Department : 'ยังไม่พบข้อมูลเดือนนี้'}</p>
+                        <p class="text-[9px] text-slate-400 font-bold uppercase truncate mb-6">${top.Department !== '-' ? simplifyDept(top.Department) : 'ยังไม่พบข้อมูลเดือนนี้'}</p>
                         <div class="mt-auto pt-4 border-t border-slate-50 flex items-center gap-2">
                             <i data-lucide="clock" class="w-3 h-3 text-red-600"></i>
                             <p class="text-[10px] text-red-600 font-black italic">${top.CreatedDateTime !== '-' ? top.CreatedDateTime : '-'}</p>
