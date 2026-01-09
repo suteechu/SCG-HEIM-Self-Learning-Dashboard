@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCG HEIM dashboard Self Learning - V1.4.1 Full View</title>
+    <title>SCG HEIM dashboard Self Learning - V1.5 Persistence</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -29,24 +29,38 @@
         @keyframes shine { from { left: -100%; } to { left: 200%; } }
         .animate-shine { position: relative; overflow: hidden; }
         .animate-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent); transform: skewX(-25deg); animation: shine 3s infinite; }
+        #loading-overlay { background: rgba(255,255,255,0.8); backdrop-filter: blur(8px); z-index: 9999; display: flex; }
     </style>
 </head>
 <body class="text-slate-900 overflow-x-hidden">
+
+    <!-- Loading State -->
+    <div id="loading-overlay" class="fixed inset-0 items-center justify-center hidden">
+        <div class="flex flex-col items-center">
+            <div class="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-xs font-black uppercase tracking-widest text-slate-500 italic">Syncing Data with Cloud...</p>
+        </div>
+    </div>
 
     <!-- Header -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50 px-6 py-3 shadow-sm">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('overview')">
-                <div class="w-8 h-8 bg-red-600 rounded flex items-center justify-center text-white shadow-lg shadow-red-600/20 transition-transform">
+                <div class="w-8 h-8 bg-red-600 rounded flex items-center justify-center text-white shadow-lg shadow-red-600/20">
                     <i data-lucide="zap" class="w-5 h-5" fill="white"></i>
                 </div>
                 <div>
                     <h1 class="text-lg font-black tracking-tighter text-slate-800 uppercase italic leading-none">HEIM OPS</h1>
-                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 italic">Dashboard Self Learning - V1.4.1</p>
+                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 italic">Dashboard Self Learning (Cloud) - V1.5</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-2">
+                <div id="cloud-status" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg mr-2">
+                    <div class="w-2 h-2 rounded-full bg-slate-300"></div>
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Offline</span>
+                </div>
+
                 <div class="bg-slate-100 p-1 rounded-lg flex">
                     <button id="tab-overview" onclick="switchTab('overview')" class="flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all tab-active">
                         <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> ภาพรวม
@@ -135,13 +149,13 @@
                 </div>
             </div>
 
-            <!-- Summary Row: Winner, Speed Star & Pending List (Full Open) -->
+            <!-- Summary Row -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Winner Highlight -->
                 <div class="bg-slate-900 text-white p-6 rounded-[2rem] shadow-xl relative overflow-hidden flex flex-col justify-center animate-shine">
                     <div class="absolute top-0 right-0 p-4 opacity-10"><i data-lucide="trophy" class="w-24 h-24"></i></div>
                     <div class="relative z-10">
-                        <span class="px-2 py-0.5 bg-yellow-400 text-slate-900 text-[8px] font-black uppercase italic rounded-full mb-3 inline-block">Grand Champion</span>
+                        <span class="px-2 py-0.5 bg-yellow-400 text-slate-900 text-[8px] font-black uppercase italic rounded-full mb-3 inline-block leading-none">Grand Champion</span>
                         <h2 id="winner-name" class="text-2xl font-black italic tracking-tighter uppercase mb-1 leading-none">-</h2>
                         <p id="winner-dept" class="text-slate-500 font-bold text-[9px] uppercase tracking-widest truncate mb-4 leading-tight">-</p>
                         <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest italic leading-none">Total Hits: <span id="winner-hits" class="text-white text-lg ml-1">0</span></p>
@@ -153,7 +167,7 @@
                     <div class="absolute top-0 right-0 p-4 opacity-5 text-red-600"><i data-lucide="sunrise" class="w-24 h-24"></i></div>
                     <div class="relative z-10">
                         <div class="flex items-center gap-2 mb-3">
-                            <span id="early-month-label" class="px-2 py-0.5 bg-red-600 text-white text-[8px] font-black uppercase italic rounded-full">-</span>
+                            <span id="early-month-label" class="px-2 py-0.5 bg-red-600 text-white text-[8px] font-black uppercase italic rounded-full leading-none">-</span>
                             <span class="text-[8px] font-black text-slate-400 uppercase italic">Monthly Speed Star</span>
                         </div>
                         <h2 id="early-name" class="text-2xl font-black italic tracking-tighter uppercase mb-1 leading-none text-slate-800">-</h2>
@@ -163,7 +177,7 @@
                     </div>
                 </div>
 
-                <!-- Pending Learner List (Full Open - No Scroll Limit) -->
+                <!-- Pending Learner List (Full Open) -->
                 <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 flex flex-col">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-[10px] font-black text-slate-800 flex items-center gap-2 uppercase italic tracking-tight">
@@ -172,7 +186,7 @@
                         <span id="pending-count-label" class="text-[8px] font-bold text-slate-300 uppercase italic">0 Persons</span>
                     </div>
                     <div id="inactive-list-summary" class="space-y-1.5">
-                        <!-- JS Injected: All Inactive -->
+                        <!-- JS Injected -->
                     </div>
                 </div>
             </div>
@@ -181,14 +195,10 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Individual Rankings -->
                 <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-xs font-black text-slate-800 flex items-center gap-2 uppercase italic tracking-tight">
-                            <i data-lucide="users" class="text-red-600 w-4 h-4"></i> Performance (Top 10)
-                        </h3>
-                    </div>
-                    <div class="h-[300px]">
-                        <canvas id="learnerChart"></canvas>
-                    </div>
+                    <h3 class="text-xs font-black text-slate-800 flex items-center gap-2 uppercase italic tracking-tight mb-6">
+                        <i data-lucide="users" class="text-red-600 w-4 h-4"></i> Performance (Top 10)
+                    </h3>
+                    <div class="h-[300px]"><canvas id="learnerChart"></canvas></div>
                 </div>
 
                 <!-- 3-Year Tendency -->
@@ -202,15 +212,12 @@
                             <div class="flex items-center gap-1.5 text-[8px] font-bold text-red-500"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Prev</div>
                         </div>
                     </div>
-                    <div class="h-[300px]">
-                        <canvas id="tendencyChart"></canvas>
-                    </div>
+                    <div class="h-[300px]"><canvas id="tendencyChart"></canvas></div>
                 </div>
             </div>
 
         </div>
 
-        <!-- History Tab -->
         <div id="content-earlybird" class="hidden">
             <div class="bg-white p-12 rounded-[3rem] border border-slate-200 shadow-sm text-center">
                 <h3 class="text-2xl font-black italic tracking-tighter uppercase mb-8">Monthly Speed Stars History</h3>
@@ -243,21 +250,166 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'scg-heim-v1-5';
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
         let members = [];
         let records = [];
         let tendencyChart, learnerChart;
+        let currentUser = null;
 
         const MONTH_NAMES = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
         const MONTH_SHORT = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
 
-        window.onload = function() {
+        // FIXED PATH SEGMENTS (Even segments required for doc() - Segment Count: 6)
+        const DATA_DOC_PATH = ['artifacts', appId, 'public', 'data', 'master_data', 'primary'];
+
+        window.onload = async function() {
             lucide.createIcons();
-            loadFromStorage();
-            runAnalysis();
+            document.getElementById('loading-overlay').classList.add('flex');
+            
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Auth failed:", err);
+            }
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUser = user;
+                    updateCloudStatus(true);
+                    await syncFromCloud();
+                } else {
+                    updateCloudStatus(false);
+                }
+                document.getElementById('loading-overlay').classList.remove('flex');
+                document.getElementById('loading-overlay').classList.add('hidden');
+            });
         };
 
-        function switchTab(tab) {
+        function updateCloudStatus(isOnline) {
+            const statusDiv = document.getElementById('cloud-status');
+            const dot = statusDiv.querySelector('div');
+            const text = statusDiv.querySelector('span');
+            if (isOnline) {
+                dot.className = 'w-2 h-2 rounded-full bg-green-500 animate-pulse';
+                text.innerText = 'Online - Cloud Sync';
+                text.className = 'text-[9px] font-black text-green-600 uppercase tracking-widest italic';
+            } else {
+                dot.className = 'w-2 h-2 rounded-full bg-slate-300';
+                text.innerText = 'Offline';
+            }
+        }
+
+        async function syncFromCloud() {
+            if (!currentUser) return;
+            const docRef = doc(db, ...DATA_DOC_PATH);
+            try {
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    members = data.members ? JSON.parse(data.members) : [];
+                    records = data.records ? JSON.parse(data.records) : [];
+                    populateDepts();
+                    runAnalysis();
+                }
+            } catch (err) {
+                console.error("Fetch error:", err);
+            }
+        }
+
+        async function saveToCloud() {
+            if (!currentUser) return;
+            const docRef = doc(db, ...DATA_DOC_PATH);
+            try {
+                await setDoc(docRef, {
+                    members: JSON.stringify(members),
+                    records: JSON.stringify(records),
+                    lastUpdate: new Date().toISOString()
+                }, { merge: true });
+            } catch (err) {
+                console.error("Save error:", err);
+            }
+        }
+
+        window.toggleImportModal = function() { document.getElementById('import-modal').classList.toggle('hidden'); }
+
+        window.handleFile = function(event, type) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(sheet);
+                
+                if(type === 'members') {
+                    members = json.map(m => ({
+                        name: String(m.Name || m.name || m['ชื่อพนักงาน'] || m['ชื่อ'] || "Unknown"),
+                        dept: String(m.Department || m.department || m['แผนก'] || "ไม่ระบุ")
+                    })).filter(m => m.name !== "Unknown");
+                } else {
+                    records = json.map(r => ({
+                        Name: String(r.Name || r.name || r['ชื่อพนักงาน'] || "Unknown"),
+                        Department: String(r.Department || r.department || r['แผนก'] || "ไม่ระบุ"),
+                        CreatedDateTime: String(r.CreatedDateTime || r.createddatetime || r['วันที่บันทึก'] || "")
+                    }));
+                }
+                
+                document.getElementById('loading-overlay').classList.remove('hidden');
+                document.getElementById('loading-overlay').classList.add('flex');
+                
+                await saveToCloud();
+                
+                document.getElementById('loading-overlay').classList.remove('flex');
+                document.getElementById('loading-overlay').classList.add('hidden');
+                
+                populateDepts();
+                runAnalysis();
+                window.toggleImportModal();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        window.clearData = async function() {
+            if(confirm("ล้างข้อมูลทั้งหมดจาก Cloud?")) {
+                const docRef = doc(db, ...DATA_DOC_PATH);
+                await deleteDoc(docRef);
+                location.reload();
+            }
+        }
+
+        window.captureScreen = async function() {
+            const captureArea = document.getElementById('capture-area');
+            try {
+                const canvas = await html2canvas(captureArea, {
+                    scale: 2,
+                    backgroundColor: '#f1f5f9',
+                    useCORS: true
+                });
+                const link = document.createElement('a');
+                link.download = `SCG-HEIM-Report-${new Date().toISOString().split('T')[0]}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (err) { console.error(err); }
+        }
+
+        window.switchTab = function(tab) {
             document.getElementById('content-overview').classList.toggle('hidden', tab !== 'overview');
             document.getElementById('content-earlybird').classList.toggle('hidden', tab !== 'earlybird');
             document.getElementById('tab-overview').className = `flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${tab === 'overview' ? 'tab-active' : 'text-slate-500'}`;
@@ -266,80 +418,13 @@
             else renderEarlyBirds();
         }
 
-        function toggleImportModal() { document.getElementById('import-modal').classList.toggle('hidden'); }
-
-        async function captureScreen() {
-            const captureArea = document.getElementById('capture-area');
-            const originalScrollPos = window.scrollY;
-            
-            // Show all hidden content temporarily if needed or just capture current view
-            // Using html2canvas to capture the main container
-            try {
-                const canvas = await html2canvas(captureArea, {
-                    scale: 2, // Higher resolution
-                    backgroundColor: '#f1f5f9',
-                    useCORS: true,
-                    logging: false,
-                    windowWidth: captureArea.scrollWidth,
-                    windowHeight: captureArea.scrollHeight
-                });
-                
-                const link = document.createElement('a');
-                link.download = `HEIM-Dashboard-Report-${new Date().toISOString().split('T')[0]}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            } catch (err) {
-                console.error("Capture failed:", err);
-            }
-        }
-
-        function handleFile(event, type) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const json = XLSX.utils.sheet_to_json(sheet);
-                if(type === 'members') {
-                    members = json.map(m => ({
-                        name: String(m.Name || m.name || m['ชื่อพนักงาน'] || m['ชื่อ'] || "Unknown"),
-                        dept: String(m.Department || m.department || m['แผนก'] || "ไม่ระบุ")
-                    })).filter(m => m.name !== "Unknown");
-                    localStorage.setItem('scg_heim_members', JSON.stringify(members));
-                } else {
-                    records = json.map(r => ({
-                        Name: String(r.Name || r.name || r['ชื่อพนักงาน'] || "Unknown"),
-                        Department: String(r.Department || r.department || r['แผนก'] || "ไม่ระบุ"),
-                        CreatedDateTime: String(r.CreatedDateTime || r.createddatetime || r['วันที่บันทึก'] || "")
-                    }));
-                    localStorage.setItem('scg_heim_records', JSON.stringify(records));
-                }
-                populateDepts();
-                runAnalysis();
-                toggleImportModal();
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        function loadFromStorage() {
-            const m = localStorage.getItem('scg_heim_members');
-            const r = localStorage.getItem('scg_heim_records');
-            if(m) members = JSON.parse(m);
-            if(r) records = JSON.parse(r);
-            populateDepts();
-        }
-
-        function clearData() { if(confirm("ล้างข้อมูลทั้งหมด?")) { localStorage.clear(); location.reload(); } }
-
         function populateDepts() {
             const allDepts = ["ทั้งหมด", ...new Set([...members.map(m => m.dept), ...records.map(r => r.Department)])].sort();
             const select = document.getElementById('filter-dept');
             if(select) select.innerHTML = allDepts.map(d => `<option value="${d}">${d}</option>`).join('');
         }
 
-        function runAnalysis() {
+        window.runAnalysis = function() {
             const year = document.getElementById('filter-year').value;
             const month = document.getElementById('filter-month').value;
             const dept = document.getElementById('filter-dept').value;
@@ -386,7 +471,6 @@
                 const mIdx = parseInt(String(first.CreatedDateTime).split('-')[1]) - 1;
                 document.getElementById('early-month-label').innerText = MONTH_NAMES[mIdx];
                 document.getElementById('early-name').innerText = first.Name;
-                // Updated to show full date-month-year
                 document.getElementById('early-time').querySelector('span').innerText = `Date: ${String(first.CreatedDateTime) || "-"}`;
             } else {
                 document.getElementById('early-month-label').innerText = "No Records";
@@ -394,12 +478,11 @@
                 document.getElementById('early-time').querySelector('span').innerText = "-";
             }
 
-            // Pending Learners - FULL OPEN
             const pendingList = targetPool.filter(m => !activeNamesInFilter.has(m.name));
             document.getElementById('inactive-list-summary').innerHTML = pendingList.length > 0 ? pendingList.map(m => `
                 <div class="flex items-center justify-between p-1.5 bg-slate-50 rounded-lg border border-slate-100">
                     <span class="text-[9px] font-bold text-slate-500 truncate w-32">${m.name}</span>
-                    <span class="text-[7px] bg-slate-200 text-slate-400 px-1.5 py-0.5 rounded uppercase font-black italic">Pending</span>
+                    <span class="text-[7px] bg-slate-200 text-slate-400 px-1.5 py-0.5 rounded uppercase font-black italic shrink-0">Pending</span>
                 </div>`).join('') : '<p class="text-[9px] font-black italic opacity-20 text-center py-4">All Active!</p>';
 
             renderLearnerChart(sortedUsers.slice(0, 10));
@@ -461,8 +544,7 @@
             document.getElementById('earlybird-grid').innerHTML = MONTH_NAMES.map((m, i) => {
                 const monthly = records.filter(r => String(r.CreatedDateTime).startsWith(year) && String(r.CreatedDateTime).includes(`-${String(i+1).padStart(2,'0')}-`)).sort((a,b) => new Date(a.CreatedDateTime) - new Date(b.CreatedDateTime));
                 const top = monthly[0] || { Name: '-', CreatedDateTime: '-' };
-                // Monthly Speed Star history updated to show full date-month-year
-                return `<div class="p-6 rounded-3xl border border-slate-100 bg-white ${top.Name !== '-' ? 'shadow-sm' : 'opacity-40'} text-center"><span class="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[8px] font-black uppercase mb-4 inline-block">${m}</span><h4 class="text-lg font-black text-slate-800 truncate">${top.Name}</h4><p class="text-[9px] text-red-600 font-bold">${top.CreatedDateTime || '-'}</p></div>`;
+                return `<div class="p-6 rounded-3xl border border-slate-100 bg-white ${top.Name !== '-' ? 'shadow-sm' : 'opacity-40'} text-center"><span class="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[8px] font-black uppercase mb-4 inline-block leading-none">${m}</span><h4 class="text-lg font-black text-slate-800 truncate">${top.Name}</h4><p class="text-[9px] text-red-600 font-bold">${top.CreatedDateTime || '-'}</p></div>`;
             }).join('');
             lucide.createIcons();
         }
