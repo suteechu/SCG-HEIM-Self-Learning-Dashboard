@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCG HEIM Dashboard Self Learning - V1.6.2 Management & Fix</title>
+    <title>SCG HEIM Dashboard Self Learning - V1.6.3 Clean UI</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -36,12 +36,12 @@
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50 px-6 py-3 shadow-sm">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('overview')">
-                <div class="w-8 h-8 bg-red-600 rounded flex items-center justify-center text-white shadow-lg shadow-red-600/20 transition-transform">
+                <div class="w-8 h-8 bg-red-600 rounded flex items-center justify-center text-white shadow-lg shadow-red-600/20 transition-transform hover:scale-105">
                     <i data-lucide="zap" class="w-5 h-5" fill="white"></i>
                 </div>
                 <div>
                     <h1 class="text-lg font-black tracking-tighter text-slate-800 uppercase italic leading-none">HEIM OPS</h1>
-                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 italic">Dashboard Self Learning - V1.6.2</p>
+                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 italic">Dashboard Self Learning - V1.6.3</p>
                 </div>
             </div>
 
@@ -76,21 +76,7 @@
         </div>
     </header>
 
-    <!-- COMPACT Source Path Bar -->
-    <div class="max-w-7xl mx-auto px-6 pt-3">
-        <div class="bg-slate-900 text-white rounded-xl py-1.5 px-4 flex items-center justify-between gap-4 shadow-lg border border-slate-700 group transition-all">
-            <div class="flex items-center gap-3 flex-1 overflow-hidden">
-                <i data-lucide="folder-search" class="w-3.5 h-3.5 text-blue-400 shrink-0"></i>
-                <span class="text-[8px] font-black uppercase tracking-widest text-slate-500 border-r border-slate-700 pr-3 hidden sm:block italic shrink-0">Local Path Memo</span>
-                <input id="main-source-path" onblur="updatePath(this.value)" type="text" placeholder="D:\00_Bi\SelfLearningReports (ช่วยจำแหล่งข้อมูล)" class="bg-transparent border-none p-0 text-[10px] font-bold text-white focus:ring-0 w-full outline-none placeholder:text-slate-600" />
-            </div>
-            <div class="flex items-center gap-3 shrink-0">
-                <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" title="Auto Update is ON"></div>
-            </div>
-        </div>
-    </div>
-
-    <main id="capture-area" class="max-w-7xl mx-auto px-6 py-4 bg-[#f1f5f9]">
+    <main id="capture-area" class="max-w-7xl mx-auto px-6 py-6 bg-[#f1f5f9]">
         
         <div id="content-overview" class="space-y-6">
             <!-- Filters Area -->
@@ -175,7 +161,7 @@
                         <span id="pending-count-label" class="text-[8px] font-bold text-slate-300 uppercase italic">0 Persons</span>
                     </div>
                     <div id="inactive-list-summary" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 overflow-visible">
-                        <!-- JS -->
+                        <!-- JS Injected -->
                     </div>
                 </div>
             </div>
@@ -227,7 +213,7 @@
                         <span id="manage-member-count" class="text-[10px] text-slate-300">0 ราย</span>
                     </h3>
                     <div id="manage-members-list" class="space-y-2 overflow-y-auto custom-scrollbar flex-1 pr-2">
-                        <!-- JS -->
+                        <!-- JS Injected -->
                     </div>
                 </div>
             </div>
@@ -252,7 +238,7 @@
             <div class="bg-white p-12 rounded-[3rem] border border-slate-200 shadow-sm text-center">
                 <h3 class="text-2xl font-black italic tracking-tighter uppercase mb-12">Monthly Speed Stars History</h3>
                 <div id="earlybird-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- JS -->
+                    <!-- JS Injected -->
                 </div>
             </div>
         </div>
@@ -287,7 +273,7 @@
 
         // Config
         const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'scg-heim-v1-6-2';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'scg-heim-selflearning';
         
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -295,20 +281,19 @@
 
         let members = [];
         let records = [];
-        let sourcePath = '';
         let currentUser = null;
         let learnerChart, tendencyChart;
 
         const MONTH_NAMES = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
         const MONTH_SHORT = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
         
-        const CONFIG_PATH = ['artifacts', appId, 'public', 'data', 'config', 'main'];
         const MEMBERS_PATH = ['artifacts', appId, 'public', 'data', 'members_data', 'primary'];
         const RECORDS_META_PATH = ['artifacts', appId, 'public', 'data', 'records_meta', 'info'];
 
         function setSyncStatus(type) {
             const dot = document.getElementById('status-dot');
             const text = document.getElementById('status-text');
+            if (!dot || !text) return;
             if (type === 'syncing') {
                 dot.className = 'w-2 h-2 rounded-full bg-yellow-400 syncing-active';
                 text.innerText = 'Syncing...';
@@ -339,16 +324,11 @@
                         setSyncStatus('offline');
                     }
                 });
-            } catch (err) { console.error("Auth Failed", err); }
+            } catch (err) { console.error("Auth Init Error", err); }
         };
 
         async function syncFromCloud() {
             try {
-                const configSnap = await getDoc(doc(db, ...CONFIG_PATH));
-                if (configSnap.exists()) {
-                    sourcePath = configSnap.data().sourcePath || '';
-                    document.getElementById('main-source-path').value = sourcePath;
-                }
                 const membersSnap = await getDoc(doc(db, ...MEMBERS_PATH));
                 if (membersSnap.exists()) {
                     members = JSON.parse(membersSnap.data().data || '[]');
@@ -373,7 +353,6 @@
             if (!currentUser) return;
             setSyncStatus('syncing');
             try {
-                await setDoc(doc(db, ...CONFIG_PATH), { sourcePath: sourcePath, lastUpdate: new Date().toISOString() });
                 await setDoc(doc(db, ...MEMBERS_PATH), { data: JSON.stringify(members) });
                 const recordsStr = JSON.stringify(records);
                 const chunkSize = 800000;
@@ -386,11 +365,6 @@
                 setSyncStatus('online');
             } catch (err) { console.error("AutoSave Failed", err); }
         }
-
-        window.updatePath = function(val) {
-            sourcePath = val;
-            autoSave();
-        };
 
         window.addManualMember = async function() {
             const name = document.getElementById('manual-name').value.trim();
@@ -406,7 +380,7 @@
         };
 
         window.deleteMember = async function(index) {
-            if(!confirm("คุณต้องการลบรายชื่อพนักงานนี้ใช่หรือไม่?")) return;
+            if(!confirm("ต้องการลบรายชื่อพนักงานนี้ใช่หรือไม่?")) return;
             members.splice(index, 1);
             await autoSave();
             populateDepts();
@@ -447,7 +421,6 @@
                         dept: String(m.Department || m.department || m['แผนก'] || "ไม่ระบุ")
                     })).filter(m => m.name !== "Unknown");
                     members = [...members, ...newMembers];
-                    // Remove Duplicates by name
                     const uniqueNames = new Set();
                     members = members.filter(m => {
                         if(uniqueNames.has(m.name)) return false;
@@ -471,8 +444,7 @@
         }
 
         window.clearData = async function() {
-            if(confirm("คำเตือน: ล้างข้อมูลทั้งหมดออกจาก Cloud?")) {
-                await deleteDoc(doc(db, ...CONFIG_PATH));
+            if(confirm("ล้างข้อมูลทั้งหมดออกจาก Cloud?")) {
                 await deleteDoc(doc(db, ...MEMBERS_PATH));
                 await deleteDoc(doc(db, ...RECORDS_META_PATH));
                 location.reload();
@@ -496,11 +468,9 @@
             document.getElementById('content-overview').classList.toggle('hidden', tab !== 'overview');
             document.getElementById('content-earlybird').classList.toggle('hidden', tab !== 'earlybird');
             document.getElementById('content-manage').classList.toggle('hidden', tab !== 'manage');
-            
             document.getElementById('tab-overview').className = `flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${tab === 'overview' ? 'tab-active' : 'text-slate-500'}`;
             document.getElementById('tab-earlybird').className = `flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${tab === 'earlybird' ? 'tab-active' : 'text-slate-500'}`;
             document.getElementById('tab-manage').className = `flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${tab === 'manage' ? 'tab-active' : 'text-slate-500'}`;
-            
             if(tab === 'overview') runAnalysis();
             else if(tab === 'earlybird') renderEarlyBirds();
             else renderManageData();
@@ -529,33 +499,28 @@
             const activeSet = new Set(filtered.map(r => r.Name));
             const activeCount = targetPool.filter(m => activeSet.has(m.name)).length;
             const inactiveCount = targetPool.length - activeCount;
-            
             document.getElementById('stat-total').innerText = filtered.length.toLocaleString();
             document.getElementById('stat-active').innerText = activeCount.toLocaleString();
             document.getElementById('stat-avg').innerText = (activeCount > 0 ? filtered.length / activeCount : 0).toFixed(1);
             document.getElementById('stat-rate').innerText = (targetPool.length > 0 ? (activeCount / targetPool.length) * 100 : 0).toFixed(1) + "%";
             document.getElementById('stat-inactive').innerText = inactiveCount.toLocaleString();
             document.getElementById('pending-count-label').innerText = inactiveCount.toLocaleString() + " Persons";
-            
             const userCounts = {};
             filtered.forEach(r => userCounts[r.Name] = (userCounts[r.Name] || 0) + 1);
             const sorted = Object.entries(userCounts).map(([name, count]) => {
                 const m = members.find(x => x.name === name);
                 return { name, count, dept: m ? m.dept : "ไม่ระบุ" };
             }).sort((a,b) => b.count - a.count);
-            
             const winner = sorted[0];
             document.getElementById('winner-name').innerText = winner ? winner.name : "-";
             document.getElementById('winner-dept').innerText = winner ? winner.dept : "-";
             document.getElementById('winner-hits').innerText = winner ? winner.count.toLocaleString() : "0";
-            
             const pending = targetPool.filter(m => !activeSet.has(m.name));
             document.getElementById('inactive-list-summary').innerHTML = pending.length > 0 ? pending.map(m => `
                 <div class="flex items-center justify-between p-2 bg-slate-50 rounded-xl border border-slate-100 transition-all hover:bg-white hover:shadow-sm">
                     <span class="text-[9px] font-bold text-slate-500 truncate w-24">${m.name}</span>
                     <span class="text-[7px] bg-slate-200 text-slate-400 px-1.5 py-0.5 rounded uppercase font-black italic">Pending</span>
-                </div>`).join('') : '<p class="text-[9px] font-black italic opacity-20 text-center py-4 uppercase col-span-full">All Active!</p>';
-            
+                </div>`).join('') : '<p class="text-[9px] font-black italic opacity-20 text-center py-4 uppercase col-span-full">Everyone is Active!</p>';
             renderCharts(sorted.slice(0, 10), y);
             lucide.createIcons();
         }
