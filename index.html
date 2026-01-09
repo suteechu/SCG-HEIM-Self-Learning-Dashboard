@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCG HEIM Dashboard Self Learning - V1.5.6 Stable Cloud</title>
+    <title>SCG HEIM Dashboard Self Learning - V1.5.8 Auto Update</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -26,41 +26,30 @@
         .kpi-card { transition: all 0.2s ease; border: 1px solid #e2e8f0; }
         .kpi-card:hover { transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         .modal-overlay { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
-        @keyframes shine { from { left: -100%; } to { left: 200%; } }
-        .animate-shine { position: relative; overflow: hidden; }
-        .animate-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent); transform: skewX(-25deg); animation: shine 3s infinite; }
-        #loading-overlay { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        @keyframes pulse-sync { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .syncing-active { animation: pulse-sync 1.5s infinite; }
     </style>
 </head>
 <body class="text-slate-900 overflow-x-hidden">
-
-    <!-- Loading State -->
-    <div id="loading-overlay" class="fixed inset-0 hidden">
-        <div class="flex flex-col items-center">
-            <div class="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p class="text-xs font-black uppercase tracking-widest text-slate-500 italic">Syncing Data with Cloud...</p>
-            <p id="loading-msg" class="text-[10px] text-slate-400 mt-2">กำลังตรวจสอบข้อมูลล่าสุด...</p>
-            <button id="force-close-loading" onclick="hideLoading()" class="mt-6 px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-lg text-[10px] font-bold uppercase hidden">ข้ามการโหลด (Force Start)</button>
-        </div>
-    </div>
 
     <!-- Header -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50 px-6 py-3 shadow-sm">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('overview')">
-                <div class="w-8 h-8 bg-red-600 rounded flex items-center justify-center text-white shadow-lg shadow-red-600/20 transition-transform hover:scale-105">
+                <div class="w-8 h-8 bg-red-600 rounded flex items-center justify-center text-white shadow-lg shadow-red-600/20 transition-transform">
                     <i data-lucide="zap" class="w-5 h-5" fill="white"></i>
                 </div>
                 <div>
                     <h1 class="text-lg font-black tracking-tighter text-slate-800 uppercase italic leading-none">HEIM OPS</h1>
-                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 italic">Dashboard Self Learning (Cloud) - V1.5.6</p>
+                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 italic">Dashboard Self Learning (Auto Update) - V1.5.8</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-2">
+                <!-- Auto Sync Status -->
                 <div id="cloud-status" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg mr-2">
-                    <div class="w-2 h-2 rounded-full bg-slate-300"></div>
-                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Checking Cloud...</span>
+                    <div id="status-dot" class="w-2 h-2 rounded-full bg-slate-300"></div>
+                    <span id="status-text" class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Offline</span>
                 </div>
 
                 <div class="bg-slate-100 p-1 rounded-lg flex">
@@ -86,6 +75,20 @@
             </div>
         </div>
     </header>
+
+    <!-- Inline Source Path Editor (Visible on Dashboard) -->
+    <div class="max-w-7xl mx-auto px-6 pt-4">
+        <div class="bg-white border border-slate-200 rounded-2xl p-3 px-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="folder" class="w-4 h-4"></i></div>
+                <div>
+                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest italic leading-none mb-1">Source Path (D:\..)</p>
+                    <input id="main-source-path" onblur="updatePath(this.value)" type="text" placeholder="ระบุโฟลเดอร์ไฟล์..." class="bg-transparent border-none p-0 text-xs font-bold text-slate-700 focus:ring-0 w-64 md:w-80 outline-none" />
+                </div>
+            </div>
+            <p class="text-[9px] text-slate-300 font-bold italic uppercase tracking-widest">แก้ไขข้อมูลนี้จะบันทึกลง Cloud อัตโนมัติ</p>
+        </div>
+    </div>
 
     <main id="capture-area" class="max-w-7xl mx-auto px-6 py-6 bg-[#f1f5f9]">
         
@@ -154,7 +157,6 @@
 
             <!-- Summary Row -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Winner Highlight -->
                 <div class="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden flex flex-col justify-center animate-shine">
                     <div class="absolute top-0 right-0 p-4 opacity-10"><i data-lucide="trophy" class="w-24 h-24"></i></div>
                     <div class="relative z-10">
@@ -165,7 +167,6 @@
                     </div>
                 </div>
 
-                <!-- First Learner -->
                 <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col justify-center relative overflow-hidden group">
                     <div class="absolute top-0 right-0 p-4 opacity-5 text-red-600"><i data-lucide="sunrise" class="w-24 h-24"></i></div>
                     <div class="relative z-10">
@@ -180,7 +181,6 @@
                     </div>
                 </div>
 
-                <!-- Pending Learner List (Full Open View) -->
                 <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col h-full">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-[10px] font-black text-slate-800 flex items-center gap-2 uppercase italic tracking-tight">
@@ -189,26 +189,24 @@
                         <span id="pending-count-label" class="text-[8px] font-bold text-slate-300 uppercase italic">0 Persons</span>
                     </div>
                     <div id="inactive-list-summary" class="space-y-1.5 overflow-visible">
-                        <!-- JS Injected: All Inactive Learners -->
+                        <!-- JS Injected -->
                     </div>
                 </div>
             </div>
 
             <!-- Graphs Section -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Individual Rankings -->
                 <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col">
                     <h3 class="text-xs font-black text-slate-800 flex items-center gap-2 uppercase italic tracking-tight mb-8">
-                        <i data-lucide="users" class="text-red-600 w-4 h-4"></i> Individual Performance (Top 10)
+                        <i data-lucide="users" class="text-red-600 w-4 h-4"></i> Performance (Top 10)
                     </h3>
                     <div class="h-[320px]"><canvas id="learnerChart"></canvas></div>
                 </div>
 
-                <!-- 3-Year Tendency -->
                 <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col">
                     <div class="flex items-center justify-between mb-8">
                         <h3 class="text-xs font-black text-slate-800 flex items-center gap-2 uppercase italic tracking-tight">
-                            <i data-lucide="trending-up" class="text-blue-600 w-4 h-4"></i> Tendency (3-Year Comparison)
+                            <i data-lucide="trending-up" class="text-blue-600 w-4 h-4"></i> Tendency (3-Year)
                         </h3>
                         <div class="flex gap-4">
                             <div class="flex items-center gap-1.5 text-[8px] font-bold text-blue-600"><span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span> Current</div>
@@ -218,7 +216,6 @@
                     <div class="h-[320px]"><canvas id="tendencyChart"></canvas></div>
                 </div>
             </div>
-
         </div>
 
         <div id="content-earlybird" class="hidden">
@@ -235,25 +232,20 @@
     <div id="import-modal" class="fixed inset-0 z-[100] hidden modal-overlay flex items-center justify-center p-6">
         <div class="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl p-10 border border-slate-200">
             <div class="flex items-center justify-between mb-8 border-b pb-6">
-                <h3 class="text-xl font-bold text-slate-800 italic uppercase">Import Hub</h3>
+                <h3 class="text-xl font-bold text-slate-800 italic uppercase">File Import</h3>
                 <button onclick="toggleImportModal()" class="text-slate-300 hover:text-red-600"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-center">
                 <div onclick="document.getElementById('file-members').click()" class="bg-slate-50 p-8 rounded-3xl border-2 border-dashed border-slate-200 cursor-pointer group hover:border-red-500 hover:bg-white transition-all">
                     <i data-lucide="users" class="w-10 h-10 mx-auto text-slate-300 group-hover:text-red-600 mb-4"></i>
-                    <p class="font-bold text-slate-700 text-xs italic uppercase">1. รายชื่อพนักงาน</p>
-                    <p class="text-[9px] text-slate-400 mt-2">File: members-fixed</p>
+                    <p class="font-bold text-slate-700 text-xs italic uppercase">รายชื่อพนักงาน</p>
                     <input type="file" id="file-members" class="hidden" accept=".xlsx,.xls,.csv" onchange="handleFile(event, 'members')">
                 </div>
                 <div onclick="document.getElementById('file-records').click()" class="bg-slate-50 p-8 rounded-3xl border-2 border-dashed border-slate-200 cursor-pointer group hover:border-red-500 hover:bg-white transition-all">
                     <i data-lucide="history" class="w-10 h-10 mx-auto text-slate-300 group-hover:text-red-600 mb-4"></i>
-                    <p class="font-bold text-slate-700 text-xs italic uppercase">2. รายงานการเรียน</p>
-                    <p class="text-[9px] text-slate-400 mt-2">File: Self Learning</p>
+                    <p class="font-bold text-slate-700 text-xs italic uppercase">รายงานการเรียน</p>
                     <input type="file" id="file-records" class="hidden" accept=".xlsx,.xls,.csv" onchange="handleFile(event, 'records')">
                 </div>
-            </div>
-            <div class="mt-8 pt-6 border-t text-center">
-               <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest italic">Source: D:\00_Bi\SelfLearningReports</p>
             </div>
         </div>
     </div>
@@ -263,9 +255,8 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Config
         const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'scg-heim-v1-5-6';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'scg-heim-selflearning';
         
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -273,58 +264,37 @@
 
         let members = [];
         let records = [];
-        let tendencyChart, learnerChart;
+        let sourcePath = '';
         let currentUser = null;
+        let learnerChart, tendencyChart;
 
         const MONTH_NAMES = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
         const MONTH_SHORT = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-        
-        // Fixed Path: 6 segments total (artifacts/id/public/data/master_data/primary)
         const DOC_PATH = ['artifacts', appId, 'public', 'data', 'master_data', 'primary'];
 
-        window.hideLoading = function() {
-            const el = document.getElementById('loading-overlay');
-            if (el) { el.classList.remove('flex'); el.classList.add('hidden'); }
-        };
-
-        function showLoading(msg) {
-            const el = document.getElementById('loading-overlay');
-            const txt = document.getElementById('loading-msg');
-            if (el) { el.classList.remove('hidden'); el.classList.add('flex'); }
-            if (txt && msg) txt.innerText = msg;
-        }
-
-        function updateCloudStatus(status, label) {
-            const statusDiv = document.getElementById('cloud-status');
-            const dot = statusDiv?.querySelector('div');
-            const text = statusDiv?.querySelector('span');
-            if (!statusDiv) return;
-
-            if (status === 'online') {
-                dot.className = 'w-2 h-2 rounded-full bg-green-500 animate-pulse';
-                text.innerText = label || 'Online - Cloud Sync';
+        // UI Updates
+        function setSyncStatus(type) {
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+            if (type === 'syncing') {
+                dot.className = 'w-2 h-2 rounded-full bg-yellow-400 syncing-active';
+                text.innerText = 'Syncing...';
+                text.className = 'text-[9px] font-black text-yellow-600 uppercase tracking-widest italic';
+            } else if (type === 'online') {
+                dot.className = 'w-2 h-2 rounded-full bg-green-500';
+                text.innerText = 'Online - Auto Sync';
                 text.className = 'text-[9px] font-black text-green-600 uppercase tracking-widest italic';
-            } else if (status === 'error') {
-                dot.className = 'w-2 h-2 rounded-full bg-red-500';
-                text.innerText = label || 'Sync Error';
-                text.className = 'text-[9px] font-black text-red-500 uppercase tracking-widest italic';
             } else {
                 dot.className = 'w-2 h-2 rounded-full bg-slate-300';
-                text.innerText = label || 'Offline Mode';
+                text.innerText = 'Offline Mode';
                 text.className = 'text-[9px] font-black text-slate-400 uppercase tracking-widest italic';
             }
         }
 
         window.onload = async function() {
             lucide.createIcons();
-            showLoading("กำลังเชื่อมต่อระบบ...");
-
-            const safetyTimeout = setTimeout(() => {
-                const btn = document.getElementById('force-close-loading');
-                if (btn) btn.classList.remove('hidden');
-                setTimeout(hideLoading, 3000);
-            }, 8000);
-
+            
+            // Authentication
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
@@ -333,27 +303,16 @@
                 }
 
                 onAuthStateChanged(auth, async (user) => {
-                    clearTimeout(safetyTimeout);
                     if (user) {
                         currentUser = user;
-                        updateCloudStatus('online');
-                        showLoading("กำลังดึงข้อมูลล่าสุดจาก Cloud...");
-                        try {
-                            await syncFromCloud();
-                        } catch (e) {
-                            console.error("Sync failed", e);
-                            updateCloudStatus('error');
-                        }
+                        setSyncStatus('syncing');
+                        await syncFromCloud();
+                        setSyncStatus('online');
                     } else {
-                        updateCloudStatus('offline');
+                        setSyncStatus('offline');
                     }
-                    hideLoading();
                 });
-            } catch (err) {
-                console.error("Init failed", err);
-                updateCloudStatus('error');
-                hideLoading();
-            }
+            } catch (err) { console.error("Auth Init Failed", err); }
         };
 
         async function syncFromCloud() {
@@ -363,27 +322,36 @@
                 const d = snap.data();
                 members = d.members ? JSON.parse(d.members) : [];
                 records = d.records ? JSON.parse(d.records) : [];
+                sourcePath = d.sourcePath || '';
+                
+                document.getElementById('main-source-path').value = sourcePath;
                 populateDepts();
                 runAnalysis();
             }
         }
 
-        async function saveToCloud() {
+        async function autoSave() {
             if (!currentUser) return;
+            setSyncStatus('syncing');
             const docRef = doc(db, ...DOC_PATH);
             try {
                 await setDoc(docRef, {
                     members: JSON.stringify(members),
                     records: JSON.stringify(records),
+                    sourcePath: sourcePath,
                     lastUpdate: new Date().toISOString()
                 }, { merge: true });
+                setSyncStatus('online');
             } catch (err) {
-                console.error("Save Error", err);
-                updateCloudStatus('error', 'Save Failed');
+                console.error("AutoSave Failed", err);
+                setSyncStatus('offline');
             }
         }
 
-        window.toggleImportModal = () => document.getElementById('import-modal').classList.toggle('hidden');
+        window.updatePath = function(val) {
+            sourcePath = val;
+            autoSave();
+        };
 
         window.handleFile = function(event, type) {
             const file = event.target.files[0];
@@ -408,9 +376,7 @@
                     }));
                 }
                 
-                showLoading("กำลังอัปโหลดข้อมูล...");
-                await saveToCloud();
-                hideLoading();
+                await autoSave();
                 populateDepts();
                 runAnalysis();
                 window.toggleImportModal();
@@ -419,8 +385,7 @@
         }
 
         window.clearData = async function() {
-            if(confirm("คำเตือน: คุณต้องการล้างข้อมูลทั้งหมดใน Cloud ใช่หรือไม่?")) {
-                showLoading("กำลังลบข้อมูล...");
+            if(confirm("คำเตือน: ล้างข้อมูลทั้งหมดออกจาก Cloud?")) {
                 const docRef = doc(db, ...DOC_PATH);
                 await deleteDoc(docRef);
                 location.reload();
@@ -432,11 +397,13 @@
             try {
                 const canvas = await html2canvas(area, { scale: 2, backgroundColor: '#f1f5f9', useCORS: true });
                 const link = document.createElement('a');
-                link.download = `HEIM-Report-${new Date().toISOString().split('T')[0]}.png`;
+                link.download = `HEIM-KM-Report.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
             } catch (err) { console.error(err); }
         }
+
+        window.toggleImportModal = () => document.getElementById('import-modal').classList.toggle('hidden');
 
         window.switchTab = function(tab) {
             document.getElementById('content-overview').classList.toggle('hidden', tab !== 'overview');
@@ -505,7 +472,7 @@
                 <div class="flex items-center justify-between p-1.5 bg-slate-50 rounded-lg border border-slate-100">
                     <span class="text-[9px] font-bold text-slate-500 truncate w-32">${m.name}</span>
                     <span class="text-[7px] bg-slate-200 text-slate-400 px-1.5 py-0.5 rounded uppercase font-black italic">Pending</span>
-                </div>`).join('') : '<p class="text-[9px] font-black italic opacity-20 text-center py-4 uppercase tracking-widest">Great! Everyone is Active</p>';
+                </div>`).join('') : '<p class="text-[9px] font-black italic opacity-20 text-center py-4 uppercase">All Active!</p>';
 
             renderCharts(sorted.slice(0, 10), y);
             lucide.createIcons();
@@ -553,7 +520,7 @@
             document.getElementById('earlybird-grid').innerHTML = MONTH_NAMES.map((m, i) => {
                 const mon = records.filter(r => String(r.CreatedDateTime).startsWith(y) && String(r.CreatedDateTime).includes(`-${String(i+1).padStart(2,'0')}-`)).sort((a,b) => new Date(a.CreatedDateTime) - new Date(b.CreatedDateTime));
                 const top = mon[0] || { Name: '-', CreatedDateTime: '-' };
-                return `<div class="p-6 rounded-3xl border border-slate-100 bg-white ${top.Name !== '-' ? 'shadow-sm' : 'opacity-40'} text-center"><span class="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[8px] font-black uppercase mb-4 inline-block leading-none">${m}</span><h4 class="text-lg font-black text-slate-800 truncate uppercase tracking-tighter">${top.Name}</h4><p class="text-[9px] text-red-600 font-bold italic">${top.CreatedDateTime || '-'}</p></div>`;
+                return `<div class="p-6 rounded-3xl border border-slate-100 bg-white ${top.Name !== '-' ? 'shadow-sm' : 'opacity-40'} text-center"><span class="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[8px] font-black uppercase mb-4 inline-block leading-none">${m}</span><h4 class="text-lg font-black text-slate-800 truncate uppercase">${top.Name}</h4><p class="text-[9px] text-red-600 font-bold italic">${top.CreatedDateTime || '-'}</p></div>`;
             }).join('');
             lucide.createIcons();
         }
