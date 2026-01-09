@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCG HEIM Dashboard Self Learning - V1.6.3 Clean UI</title>
+    <title>SCG HEIM Dashboard Self Learning - V1.6.4 Local Standalone</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -26,8 +26,6 @@
         .kpi-card { transition: all 0.2s ease; border: 1px solid #e2e8f0; }
         .kpi-card:hover { transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         .modal-overlay { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
-        @keyframes pulse-sync { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .syncing-active { animation: pulse-sync 1.5s infinite; }
     </style>
 </head>
 <body class="text-slate-900 overflow-x-hidden">
@@ -41,17 +39,11 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-black tracking-tighter text-slate-800 uppercase italic leading-none">HEIM OPS</h1>
-                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 italic">Dashboard Self Learning - V1.6.3</p>
+                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 italic">Dashboard Self Learning - V1.6.4</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-2">
-                <!-- Sync Status Light -->
-                <div id="cloud-status" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg mr-2">
-                    <div id="status-dot" class="w-2 h-2 rounded-full bg-slate-300"></div>
-                    <span id="status-text" class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Checking Cloud...</span>
-                </div>
-
                 <div class="bg-slate-100 p-1 rounded-lg flex">
                     <button id="tab-overview" onclick="switchTab('overview')" class="flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all tab-active">
                         <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> ภาพรวม
@@ -143,7 +135,7 @@
             <!-- Summary Row -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Champion -->
-                <div class="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden flex flex-col justify-center animate-shine">
+                <div class="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-xl relative overflow-hidden flex flex-col justify-center">
                     <div class="absolute top-0 right-0 p-4 opacity-10"><i data-lucide="trophy" class="w-24 h-24"></i></div>
                     <div class="relative z-10">
                         <span class="px-2 py-0.5 bg-yellow-400 text-slate-900 text-[8px] font-black uppercase italic rounded-full mb-4 inline-block leading-none">Grand Champion</span>
@@ -189,7 +181,7 @@
                 <!-- Manual Add Member Form -->
                 <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200">
                     <h3 class="text-sm font-black text-slate-800 mb-6 uppercase italic tracking-tight flex items-center gap-2">
-                        <i data-lucide="user-plus" class="text-blue-600"></i> เพิ่มพนักงานใหม่ (Manual Fix)
+                        <i data-lucide="user-plus" class="text-blue-600"></i> เพิ่มพนักงานใหม่ (Local)
                     </h3>
                     <div class="space-y-4">
                         <div>
@@ -201,7 +193,7 @@
                             <input id="manual-dept" type="text" placeholder="ระบุแผนก..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none focus:ring-1 focus:ring-blue-500 transition-all shadow-inner" />
                         </div>
                         <button onclick="addManualMember()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 italic">
-                            + เพิ่มลงฐานข้อมูล Cloud
+                            + เพิ่มลงฐานข้อมูล
                         </button>
                     </div>
                 </div>
@@ -224,11 +216,11 @@
                 </div>
                 <div class="p-6 bg-red-50 rounded-3xl border border-red-100 flex flex-col md:flex-row items-center justify-between gap-6">
                     <div>
-                        <h4 class="text-red-600 font-black text-sm uppercase italic">ลบข้อมูล Cloud ทั้งหมด</h4>
-                        <p class="text-[10px] text-red-400 font-bold mt-1">คำเตือน: ข้อมูลรายชื่อและประวัติการเรียนจะถูกลบถาวร ไม่สามารถย้อนกลับได้</p>
+                        <h4 class="text-red-600 font-black text-sm uppercase italic">ล้างข้อมูลทั้งหมด</h4>
+                        <p class="text-[10px] text-red-400 font-bold mt-1">คำเตือน: ข้อมูลรายชื่อและประวัติการเรียนจะถูกลบออกจากเบราว์เซอร์นี้</p>
                     </div>
                     <button onclick="clearData()" class="bg-red-600 text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-xl shadow-red-600/20 italic">
-                        <i data-lucide="trash-2" class="inline w-3 h-3 mr-2"></i> ลบฐานข้อมูลถาวร
+                        <i data-lucide="trash-2" class="inline w-3 h-3 mr-2"></i> ลบข้อมูลทั้งหมด
                     </button>
                 </div>
             </div>
@@ -236,7 +228,7 @@
 
         <div id="content-earlybird" class="hidden">
             <div class="bg-white p-12 rounded-[3rem] border border-slate-200 shadow-sm text-center">
-                <h3 class="text-2xl font-black italic tracking-tighter uppercase mb-12">Monthly Speed Stars History</h3>
+                <h3 class="text-2xl font-black italic tracking-tighter uppercase mb-12">Speed Stars History</h3>
                 <div id="earlybird-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <!-- JS Injected -->
                 </div>
@@ -248,7 +240,7 @@
     <div id="import-modal" class="fixed inset-0 z-[100] hidden modal-overlay flex items-center justify-center p-6">
         <div class="bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl p-10 border border-slate-200">
             <div class="flex items-center justify-between mb-8 border-b pb-6">
-                <h3 class="text-xl font-bold text-slate-800 italic uppercase">Manual File Update</h3>
+                <h3 class="text-xl font-bold text-slate-800 italic uppercase">Import File</h3>
                 <button onclick="toggleImportModal()" class="text-slate-300 hover:text-red-600"><i data-lucide="x" class="w-6 h-6"></i></button>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-center">
@@ -266,123 +258,61 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Config
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'scg-heim-selflearning';
-        
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
+    <script>
         let members = [];
         let records = [];
-        let currentUser = null;
         let learnerChart, tendencyChart;
 
         const MONTH_NAMES = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-        const MONTH_SHORT = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-        
-        const MEMBERS_PATH = ['artifacts', appId, 'public', 'data', 'members_data', 'primary'];
-        const RECORDS_META_PATH = ['artifacts', appId, 'public', 'data', 'records_meta', 'info'];
+        const MONTH_SHORT = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค. "];
 
-        function setSyncStatus(type) {
-            const dot = document.getElementById('status-dot');
-            const text = document.getElementById('status-text');
-            if (!dot || !text) return;
-            if (type === 'syncing') {
-                dot.className = 'w-2 h-2 rounded-full bg-yellow-400 syncing-active';
-                text.innerText = 'Syncing...';
-            } else if (type === 'online') {
-                dot.className = 'w-2 h-2 rounded-full bg-green-500';
-                text.innerText = 'Cloud: Connected';
-            } else {
-                dot.className = 'w-2 h-2 rounded-full bg-slate-300';
-                text.innerText = 'Offline Mode';
-            }
-        }
-
-        window.onload = async function() {
+        window.onload = function() {
             lucide.createIcons();
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        currentUser = user;
-                        setSyncStatus('syncing');
-                        await syncFromCloud();
-                        setSyncStatus('online');
-                    } else {
-                        setSyncStatus('offline');
-                    }
-                });
-            } catch (err) { console.error("Auth Init Error", err); }
+            loadLocalData();
         };
 
-        async function syncFromCloud() {
+        function loadLocalData() {
             try {
-                const membersSnap = await getDoc(doc(db, ...MEMBERS_PATH));
-                if (membersSnap.exists()) {
-                    members = JSON.parse(membersSnap.data().data || '[]');
-                }
-                const metaSnap = await getDoc(doc(db, ...RECORDS_META_PATH));
-                if (metaSnap.exists()) {
-                    const chunkCount = metaSnap.data().count || 0;
-                    let fullRecordsStr = "";
-                    for (let i = 0; i < chunkCount; i++) {
-                        const chunkSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'records_chunks', `chunk_${i}`));
-                        if (chunkSnap.exists()) { fullRecordsStr += chunkSnap.data().content; }
-                    }
-                    if (fullRecordsStr) { records = JSON.parse(fullRecordsStr); }
-                }
+                const savedMembers = localStorage.getItem('heim_members');
+                const savedRecords = localStorage.getItem('heim_records');
+                if (savedMembers) members = JSON.parse(savedMembers);
+                if (savedRecords) records = JSON.parse(savedRecords);
                 populateDepts();
                 runAnalysis();
                 renderManageData();
-            } catch (e) { console.error("Sync Load Failed", e); }
+            } catch (e) {
+                console.error("Local load error", e);
+            }
         }
 
-        async function autoSave() {
-            if (!currentUser) return;
-            setSyncStatus('syncing');
+        function saveLocalData() {
             try {
-                await setDoc(doc(db, ...MEMBERS_PATH), { data: JSON.stringify(members) });
-                const recordsStr = JSON.stringify(records);
-                const chunkSize = 800000;
-                const numChunks = Math.ceil(recordsStr.length / chunkSize);
-                await setDoc(doc(db, ...RECORDS_META_PATH), { count: numChunks });
-                for (let i = 0; i < numChunks; i++) {
-                    const chunkContent = recordsStr.substring(i * chunkSize, (i + 1) * chunkSize);
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'records_chunks', `chunk_${i}`), { content: chunkContent });
+                localStorage.setItem('heim_members', JSON.stringify(members));
+                localStorage.setItem('heim_records', JSON.stringify(records));
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    alert("คำเตือน: ข้อมูลมีขนาดใหญ่เกินความจุของเบราว์เซอร์ ข้อมูลบางส่วนอาจไม่ถูกบันทึก");
                 }
-                setSyncStatus('online');
-            } catch (err) { console.error("AutoSave Failed", err); }
+            }
         }
 
-        window.addManualMember = async function() {
+        window.addManualMember = function() {
             const name = document.getElementById('manual-name').value.trim();
             const dept = document.getElementById('manual-dept').value.trim();
             if (!name || !dept) return alert("กรุณาระบุชื่อและแผนก");
             members.push({ name, dept });
             document.getElementById('manual-name').value = "";
             document.getElementById('manual-dept').value = "";
-            await autoSave();
+            saveLocalData();
             populateDepts();
             runAnalysis();
             renderManageData();
         };
 
-        window.deleteMember = async function(index) {
+        window.deleteMember = function(index) {
             if(!confirm("ต้องการลบรายชื่อพนักงานนี้ใช่หรือไม่?")) return;
             members.splice(index, 1);
-            await autoSave();
+            saveLocalData();
             populateDepts();
             runAnalysis();
             renderManageData();
@@ -411,7 +341,7 @@
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = async function(e) {
+            reader.onload = function(e) {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, {type: 'array'});
                 const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
@@ -420,12 +350,14 @@
                         name: String(m.Name || m.name || m['ชื่อพนักงาน'] || m['ชื่อ'] || "Unknown"),
                         dept: String(m.Department || m.department || m['แผนก'] || "ไม่ระบุ")
                     })).filter(m => m.name !== "Unknown");
-                    members = [...members, ...newMembers];
-                    const uniqueNames = new Set();
-                    members = members.filter(m => {
-                        if(uniqueNames.has(m.name)) return false;
-                        uniqueNames.add(m.name);
-                        return true;
+                    
+                    // Add only unique names
+                    const existingNames = new Set(members.map(m => m.name));
+                    newMembers.forEach(m => {
+                        if (!existingNames.has(m.name)) {
+                            members.push(m);
+                            existingNames.add(m.name);
+                        }
                     });
                 } else {
                     records = json.map(r => ({
@@ -434,7 +366,7 @@
                         CreatedDateTime: String(r.CreatedDateTime || r.createddatetime || r['วันที่บันทึก'] || "")
                     }));
                 }
-                await autoSave();
+                saveLocalData();
                 populateDepts();
                 runAnalysis();
                 renderManageData();
@@ -443,10 +375,9 @@
             reader.readAsArrayBuffer(file);
         }
 
-        window.clearData = async function() {
-            if(confirm("ล้างข้อมูลทั้งหมดออกจาก Cloud?")) {
-                await deleteDoc(doc(db, ...MEMBERS_PATH));
-                await deleteDoc(doc(db, ...RECORDS_META_PATH));
+        window.clearData = function() {
+            if(confirm("ล้างข้อมูลทั้งหมดใช่หรือไม่?")) {
+                localStorage.clear();
                 location.reload();
             }
         }
