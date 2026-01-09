@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCG HEIM dashboard Self Learning - V1.4.1 Full View</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,700;0,900;1,900&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- XLSX Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        body { font-family: 'Public Sans', sans-serif; background-color: #f1f5f9; font-size: 0.875rem; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .tab-active { background: white; color: #ef4444; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .kpi-card { transition: all 0.2s ease; }
+        .kpi-card:hover { transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .modal-overlay { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
+        @keyframes shine { from { left: -100%; } to { left: 200%; } }
+        .animate-shine { position: relative; overflow: hidden; }
+        .animate-shine::after { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent); transform: skewX(-25deg); animation: shine 3s infinite; }
+    </style>
+</head>
+<body class="text-slate-900 overflow-x-hidden">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 px-6 py-3 shadow-sm">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('overview')">
+                <div class="w-8 h-8 bg-red-600 rounded flex items-center justify-center text-white shadow-lg shadow-red-600/20 transition-transform">
+                    <i data-lucide="zap" class="w-5 h-5" fill="white"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-black tracking-tighter text-slate-800 uppercase italic leading-none">HEIM OPS</h1>
+                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-0.5 italic">Dashboard Self Learning - V1.4.1</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <div class="bg-slate-100 p-1 rounded-lg flex">
+                    <button id="tab-overview" onclick="switchTab('overview')" class="flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all tab-active">
+                        <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> ภาพรวม
+                    </button>
+                    <button id="tab-earlybird" onclick="switchTab('earlybird')" class="flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all text-slate-500">
+                        <i data-lucide="sunrise" class="w-3.5 h-3.5"></i> ผู้เรียนคนแรก
+                    </button>
+                </div>
+                <div class="w-px h-5 bg-slate-200 mx-1 hidden md:block"></div>
+                
+                <button onclick="captureScreen()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 shadow hover:bg-slate-900 transition-all">
+                    <i data-lucide="camera" class="w-3.5 h-3.5"></i> แคปหน้าจอ
+                </button>
+
+                <button onclick="toggleImportModal()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 shadow hover:bg-red-700 transition-all">
+                    <i data-lucide="upload" class="w-3.5 h-3.5"></i> นำเข้า
+                </button>
+                <button onclick="clearData()" class="p-2 text-slate-300 hover:text-red-600 transition-colors">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main id="capture-area" class="max-w-7xl mx-auto px-6 py-6 bg-[#f1f5f9]">
+        
+        <!-- Filters Area -->
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6 flex flex-wrap items-center gap-3 print:hidden">
+            <div class="flex flex-wrap gap-3 items-center flex-1">
+                <div class="flex items-center gap-2 bg-slate-50 p-1 rounded-lg border border-slate-100">
+                    <span class="text-[8px] font-black uppercase text-slate-400 px-2">ปี:</span>
+                    <select id="filter-year" onchange="runAnalysis()" class="bg-white border-none rounded-md text-[11px] font-bold p-1 px-3 shadow-sm outline-none cursor-pointer">
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-50 p-1 rounded-lg border border-slate-100">
+                    <span class="text-[8px] font-black uppercase text-slate-400 px-2">เดือน:</span>
+                    <select id="filter-month" onchange="runAnalysis()" class="bg-white border-none rounded-md text-[11px] font-bold p-1 px-3 shadow-sm outline-none cursor-pointer">
+                        <option value="ALL">ทั้งหมด</option>
+                        <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option>
+                        <option value="03">มีนาคม</option><option value="04">เมษายน</option>
+                        <option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option>
+                        <option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option>
+                        <option value="09">กันยายน</option><option value="10">ตุลาคม</option>
+                        <option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-50 p-1 rounded-lg border border-slate-100">
+                    <span class="text-[8px] font-black uppercase text-slate-400 px-2">แผนก:</span>
+                    <select id="filter-dept" onchange="runAnalysis()" class="bg-white border-none rounded-md text-[11px] font-bold p-1 px-3 shadow-sm outline-none max-w-[200px] cursor-pointer">
+                        <option value="ทั้งหมด">ทั้งหมด</option>
+                    </select>
+                </div>
+            </div>
+            <div class="relative">
+                <i data-lucide="search" class="absolute left-3 top-2.5 w-3.5 h-3.5 text-slate-300"></i>
+                <input id="search-term" oninput="runAnalysis()" type="text" placeholder="ค้นหา..." class="bg-slate-50 border-none rounded-xl text-[11px] font-bold p-2 pl-9 w-48 focus:ring-1 focus:ring-red-500 outline-none transition-all">
+            </div>
+        </div>
+
+        <div id="content-overview" class="space-y-6">
+            
+            <!-- Narrow KPI Row -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 kpi-card">
+                    <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest italic mb-1 leading-none">ยอดบันทึกรวม</p>
+                    <h3 id="stat-total" class="text-lg font-black text-slate-800 tracking-tighter">0</h3>
+                </div>
+                <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 kpi-card">
+                    <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest italic mb-1 leading-none">เรียนแล้ว (คน)</p>
+                    <h3 id="stat-active" class="text-lg font-black text-slate-800 tracking-tighter">0</h3>
+                </div>
+                <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 kpi-card">
+                    <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest italic mb-1 leading-none">เฉลี่ยต่อคน</p>
+                    <h3 id="stat-avg" class="text-lg font-black text-blue-600 tracking-tighter">0.0</h3>
+                </div>
+                <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 kpi-card">
+                    <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest italic mb-1 leading-none">อัตราส่วน (%)</p>
+                    <h3 id="stat-rate" class="text-lg font-black text-purple-600 tracking-tighter">0%</h3>
+                </div>
+                <div class="bg-white p-3.5 rounded-2xl shadow-sm border border-slate-200 kpi-card">
+                    <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest italic mb-1 leading-none">ยังไม่เรียน (คน)</p>
+                    <h3 id="stat-inactive" class="text-xl font-black text-red-600 tracking-tighter">0</h3>
+                </div>
+            </div>
+
+            <!-- Summary Row: Winner, Speed Star & Pending List (Full Open) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Winner Highlight -->
+                <div class="bg-slate-900 text-white p-6 rounded-[2rem] shadow-xl relative overflow-hidden flex flex-col justify-center animate-shine">
+                    <div class="absolute top-0 right-0 p-4 opacity-10"><i data-lucide="trophy" class="w-24 h-24"></i></div>
+                    <div class="relative z-10">
+                        <span class="px-2 py-0.5 bg-yellow-400 text-slate-900 text-[8px] font-black uppercase italic rounded-full mb-3 inline-block">Grand Champion</span>
+                        <h2 id="winner-name" class="text-2xl font-black italic tracking-tighter uppercase mb-1 leading-none">-</h2>
+                        <p id="winner-dept" class="text-slate-500 font-bold text-[9px] uppercase tracking-widest truncate mb-4 leading-tight">-</p>
+                        <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest italic leading-none">Total Hits: <span id="winner-hits" class="text-white text-lg ml-1">0</span></p>
+                    </div>
+                </div>
+
+                <!-- First Learner -->
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 flex flex-col justify-center relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-5 text-red-600"><i data-lucide="sunrise" class="w-24 h-24"></i></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span id="early-month-label" class="px-2 py-0.5 bg-red-600 text-white text-[8px] font-black uppercase italic rounded-full">-</span>
+                            <span class="text-[8px] font-black text-slate-400 uppercase italic">Monthly Speed Star</span>
+                        </div>
+                        <h2 id="early-name" class="text-2xl font-black italic tracking-tighter uppercase mb-1 leading-none text-slate-800">-</h2>
+                        <p id="early-time" class="text-red-600 font-black text-[9px] uppercase tracking-widest italic flex items-center gap-1">
+                            <i data-lucide="clock" class="w-3 h-3"></i> <span>-</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Pending Learner List (Full Open - No Scroll Limit) -->
+                <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-[10px] font-black text-slate-800 flex items-center gap-2 uppercase italic tracking-tight">
+                            <i data-lucide="user-minus" class="text-orange-600 w-3.5 h-3.5"></i> Pending Learners
+                        </h3>
+                        <span id="pending-count-label" class="text-[8px] font-bold text-slate-300 uppercase italic">0 Persons</span>
+                    </div>
+                    <div id="inactive-list-summary" class="space-y-1.5">
+                        <!-- JS Injected: All Inactive -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graphs Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Individual Rankings -->
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xs font-black text-slate-800 flex items-center gap-2 uppercase italic tracking-tight">
+                            <i data-lucide="users" class="text-red-600 w-4 h-4"></i> Performance (Top 10)
+                        </h3>
+                    </div>
+                    <div class="h-[300px]">
+                        <canvas id="learnerChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 3-Year Tendency -->
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xs font-black text-slate-800 flex items-center gap-2 uppercase italic tracking-tight">
+                            <i data-lucide="trending-up" class="text-blue-600 w-4 h-4"></i> Tendency (3-Year)
+                        </h3>
+                        <div class="flex gap-3">
+                            <div class="flex items-center gap-1.5 text-[8px] font-bold text-blue-600"><span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span> Current</div>
+                            <div class="flex items-center gap-1.5 text-[8px] font-bold text-red-500"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Prev</div>
+                        </div>
+                    </div>
+                    <div class="h-[300px]">
+                        <canvas id="tendencyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- History Tab -->
+        <div id="content-earlybird" class="hidden">
+            <div class="bg-white p-12 rounded-[3rem] border border-slate-200 shadow-sm text-center">
+                <h3 class="text-2xl font-black italic tracking-tighter uppercase mb-8">Monthly Speed Stars History</h3>
+                <div id="earlybird-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- JS Injected -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Import Modal -->
+    <div id="import-modal" class="fixed inset-0 z-[100] hidden modal-overlay flex items-center justify-center p-6">
+        <div class="bg-white w-full max-w-xl rounded-[2rem] shadow-2xl p-8 border border-slate-200">
+            <div class="flex items-center justify-between mb-6 border-b pb-4">
+                <h3 class="text-lg font-bold text-slate-800 italic uppercase">Data Hub</h3>
+                <button onclick="toggleImportModal()" class="text-slate-300 hover:text-red-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
+                <div onclick="document.getElementById('file-members').click()" class="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-slate-200 cursor-pointer group hover:border-red-500 transition-all">
+                    <i data-lucide="users" class="w-8 h-8 mx-auto text-slate-300 group-hover:text-red-600 mb-2"></i>
+                    <p class="font-bold text-slate-700 text-[10px] italic">Members</p>
+                    <input type="file" id="file-members" class="hidden" accept=".xlsx,.xls,.csv" onchange="handleFile(event, 'members')">
+                </div>
+                <div onclick="document.getElementById('file-records').click()" class="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-slate-200 cursor-pointer group hover:border-red-500 transition-all">
+                    <i data-lucide="history" class="w-8 h-8 mx-auto text-slate-300 group-hover:text-red-600 mb-2"></i>
+                    <p class="font-bold text-slate-700 text-[10px] italic">Records</p>
+                    <input type="file" id="file-records" class="hidden" accept=".xlsx,.xls,.csv" onchange="handleFile(event, 'records')">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let members = [];
+        let records = [];
+        let tendencyChart, learnerChart;
+
+        const MONTH_NAMES = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        const MONTH_SHORT = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+
+        window.onload = function() {
+            lucide.createIcons();
+            loadFromStorage();
+            runAnalysis();
+        };
+
+        function switchTab(tab) {
+            document.getElementById('content-overview').classList.toggle('hidden', tab !== 'overview');
+            document.getElementById('content-earlybird').classList.toggle('hidden', tab !== 'earlybird');
+            document.getElementById('tab-overview').className = `flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${tab === 'overview' ? 'tab-active' : 'text-slate-500'}`;
+            document.getElementById('tab-earlybird').className = `flex items-center gap-2 px-4 py-1.5 rounded-md text-xs font-bold transition-all ${tab === 'earlybird' ? 'tab-active' : 'text-slate-500'}`;
+            if(tab === 'overview') runAnalysis();
+            else renderEarlyBirds();
+        }
+
+        function toggleImportModal() { document.getElementById('import-modal').classList.toggle('hidden'); }
+
+        async function captureScreen() {
+            const captureArea = document.getElementById('capture-area');
+            const originalScrollPos = window.scrollY;
+            
+            // Show all hidden content temporarily if needed or just capture current view
+            // Using html2canvas to capture the main container
+            try {
+                const canvas = await html2canvas(captureArea, {
+                    scale: 2, // Higher resolution
+                    backgroundColor: '#f1f5f9',
+                    useCORS: true,
+                    logging: false,
+                    windowWidth: captureArea.scrollWidth,
+                    windowHeight: captureArea.scrollHeight
+                });
+                
+                const link = document.createElement('a');
+                link.download = `HEIM-Dashboard-Report-${new Date().toISOString().split('T')[0]}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (err) {
+                console.error("Capture failed:", err);
+            }
+        }
+
+        function handleFile(event, type) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(sheet);
+                if(type === 'members') {
+                    members = json.map(m => ({
+                        name: String(m.Name || m.name || m['ชื่อพนักงาน'] || m['ชื่อ'] || "Unknown"),
+                        dept: String(m.Department || m.department || m['แผนก'] || "ไม่ระบุ")
+                    })).filter(m => m.name !== "Unknown");
+                    localStorage.setItem('scg_heim_members', JSON.stringify(members));
+                } else {
+                    records = json.map(r => ({
+                        Name: String(r.Name || r.name || r['ชื่อพนักงาน'] || "Unknown"),
+                        Department: String(r.Department || r.department || r['แผนก'] || "ไม่ระบุ"),
+                        CreatedDateTime: String(r.CreatedDateTime || r.createddatetime || r['วันที่บันทึก'] || "")
+                    }));
+                    localStorage.setItem('scg_heim_records', JSON.stringify(records));
+                }
+                populateDepts();
+                runAnalysis();
+                toggleImportModal();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function loadFromStorage() {
+            const m = localStorage.getItem('scg_heim_members');
+            const r = localStorage.getItem('scg_heim_records');
+            if(m) members = JSON.parse(m);
+            if(r) records = JSON.parse(r);
+            populateDepts();
+        }
+
+        function clearData() { if(confirm("ล้างข้อมูลทั้งหมด?")) { localStorage.clear(); location.reload(); } }
+
+        function populateDepts() {
+            const allDepts = ["ทั้งหมด", ...new Set([...members.map(m => m.dept), ...records.map(r => r.Department)])].sort();
+            const select = document.getElementById('filter-dept');
+            if(select) select.innerHTML = allDepts.map(d => `<option value="${d}">${d}</option>`).join('');
+        }
+
+        function runAnalysis() {
+            const year = document.getElementById('filter-year').value;
+            const month = document.getElementById('filter-month').value;
+            const dept = document.getElementById('filter-dept').value;
+            const search = document.getElementById('search-term').value.toLowerCase();
+
+            const filtered = records.filter(r => {
+                const dt = String(r.CreatedDateTime);
+                const matchYear = year === 'ทั้งหมด' || dt.startsWith(year);
+                const matchMonth = month === 'ALL' || dt.includes(`-${month}-`);
+                const matchDept = dept === 'ทั้งหมด' || r.Department === dept;
+                const matchSearch = r.Name.toLowerCase().includes(search);
+                return matchYear && matchMonth && matchDept && matchSearch;
+            });
+
+            const targetPool = members.filter(m => dept === 'ทั้งหมด' || m.dept === dept);
+            const activeNamesInFilter = new Set(filtered.map(r => r.Name));
+            const activeCount = targetPool.filter(m => activeNamesInFilter.has(m.name)).length;
+            const inactiveCount = targetPool.length - activeCount;
+            const rate = targetPool.length > 0 ? (activeCount / targetPool.length) * 100 : 0;
+            const avg = activeCount > 0 ? filtered.length / activeCount : 0;
+
+            document.getElementById('stat-total').innerText = filtered.length.toLocaleString();
+            document.getElementById('stat-active').innerText = activeCount.toLocaleString();
+            document.getElementById('stat-avg').innerText = avg.toFixed(1);
+            document.getElementById('stat-rate').innerText = rate.toFixed(1) + "%";
+            document.getElementById('stat-inactive').innerText = inactiveCount.toLocaleString();
+            document.getElementById('pending-count-label').innerText = inactiveCount.toLocaleString() + " Persons";
+
+            const userCounts = {};
+            filtered.forEach(r => userCounts[r.Name] = (userCounts[r.Name] || 0) + 1);
+            const sortedUsers = Object.entries(userCounts).map(([name, count]) => {
+                const m = members.find(mem => mem.name === name);
+                return { name, count, dept: m ? m.dept : "ไม่ระบุ" };
+            }).sort((a,b) => b.count - a.count);
+
+            const winner = sortedUsers[0];
+            document.getElementById('winner-name').innerText = winner ? winner.name : "-";
+            document.getElementById('winner-dept').innerText = winner ? winner.dept : "-";
+            document.getElementById('winner-hits').innerText = winner ? winner.count.toLocaleString() : "0";
+
+            const currentMonthRecords = filtered.sort((a,b) => new Date(a.CreatedDateTime) - new Date(b.CreatedDateTime));
+            const first = currentMonthRecords[0];
+            if(first) {
+                const mIdx = parseInt(String(first.CreatedDateTime).split('-')[1]) - 1;
+                document.getElementById('early-month-label').innerText = MONTH_NAMES[mIdx];
+                document.getElementById('early-name').innerText = first.Name;
+                // Updated to show full date-month-year
+                document.getElementById('early-time').querySelector('span').innerText = `Date: ${String(first.CreatedDateTime) || "-"}`;
+            } else {
+                document.getElementById('early-month-label').innerText = "No Records";
+                document.getElementById('early-name').innerText = "-";
+                document.getElementById('early-time').querySelector('span').innerText = "-";
+            }
+
+            // Pending Learners - FULL OPEN
+            const pendingList = targetPool.filter(m => !activeNamesInFilter.has(m.name));
+            document.getElementById('inactive-list-summary').innerHTML = pendingList.length > 0 ? pendingList.map(m => `
+                <div class="flex items-center justify-between p-1.5 bg-slate-50 rounded-lg border border-slate-100">
+                    <span class="text-[9px] font-bold text-slate-500 truncate w-32">${m.name}</span>
+                    <span class="text-[7px] bg-slate-200 text-slate-400 px-1.5 py-0.5 rounded uppercase font-black italic">Pending</span>
+                </div>`).join('') : '<p class="text-[9px] font-black italic opacity-20 text-center py-4">All Active!</p>';
+
+            renderLearnerChart(sortedUsers.slice(0, 10));
+            renderTendencyChart(year);
+            lucide.createIcons();
+        }
+
+        function renderLearnerChart(topUsers) {
+            const ctx = document.getElementById('learnerChart');
+            if(!ctx) return;
+            if(learnerChart) learnerChart.destroy();
+            learnerChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: topUsers.map(u => u.name),
+                    datasets: [{
+                        label: 'Hits',
+                        data: topUsers.map(u => u.count),
+                        backgroundColor: topUsers.map((_, i) => i < 3 ? '#ef4444' : '#1e293b'),
+                        borderRadius: 6,
+                        barThickness: 12
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { display: false },
+                        y: { grid: { display: false }, ticks: { font: { size: 9, weight: 'bold' }, color: '#64748b' } }
+                    }
+                }
+            });
+        }
+
+        function renderTendencyChart(targetYear) {
+            const y1 = targetYear === 'ทั้งหมด' ? '2026' : targetYear;
+            const y2 = String(parseInt(y1) - 1);
+            const getData = (y) => MONTH_SHORT.map((_, i) => records.filter(r => String(r.CreatedDateTime).startsWith(y) && String(r.CreatedDateTime).includes(`-${String(i+1).padStart(2,'0')}-`)).length);
+            
+            if(tendencyChart) tendencyChart.destroy();
+            tendencyChart = new Chart(document.getElementById('tendencyChart'), {
+                type: 'line',
+                data: { labels: MONTH_SHORT, datasets: [
+                    { label: y1, data: getData(y1), borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.05)', fill: true, tension: 0.4, borderWidth: 3, pointRadius: 1.5 },
+                    { label: y2, data: getData(y2), borderColor: '#ef4444', borderDash: [4, 4], fill: false, tension: 0.4, borderWidth: 1.5, pointRadius: 0 }
+                ]},
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } }, 
+                    scales: { y: { display: true, ticks: { font: { size: 8, weight: 'bold' }, color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { font: { size: 9, weight: 'bold' }, color: '#94a3b8' } } }
+                }
+            });
+        }
+
+        function renderEarlyBirds() {
+            const year = document.getElementById('filter-year').value;
+            document.getElementById('earlybird-grid').innerHTML = MONTH_NAMES.map((m, i) => {
+                const monthly = records.filter(r => String(r.CreatedDateTime).startsWith(year) && String(r.CreatedDateTime).includes(`-${String(i+1).padStart(2,'0')}-`)).sort((a,b) => new Date(a.CreatedDateTime) - new Date(b.CreatedDateTime));
+                const top = monthly[0] || { Name: '-', CreatedDateTime: '-' };
+                // Monthly Speed Star history updated to show full date-month-year
+                return `<div class="p-6 rounded-3xl border border-slate-100 bg-white ${top.Name !== '-' ? 'shadow-sm' : 'opacity-40'} text-center"><span class="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-[8px] font-black uppercase mb-4 inline-block">${m}</span><h4 class="text-lg font-black text-slate-800 truncate">${top.Name}</h4><p class="text-[9px] text-red-600 font-bold">${top.CreatedDateTime || '-'}</p></div>`;
+            }).join('');
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>
