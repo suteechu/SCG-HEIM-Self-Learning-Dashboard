@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCG HEIM Dashboard Self Learning - V1.5.0 Premium Full Screen</title>
+    <title>SCG HEIM Dashboard Self Learning - V1.5.0 Premium Compact</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -27,13 +27,10 @@
             font-family: 'Public Sans', sans-serif; 
             background-color: var(--bg-main);
             color: #1e293b;
+            height: 100vh;
+            overflow: hidden; /* ห้ามเลื่อนหน้าหลัก */
         }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-        }
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         
@@ -47,8 +44,8 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
         }
         .kpi-card:hover { 
-            transform: translateY(-4px); 
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 12px -3px rgb(0 0 0 / 0.1); 
         }
 
         @keyframes shine { 
@@ -71,366 +68,271 @@
         }
     </style>
 </head>
-<body class="antialiased overflow-x-hidden">
+<body class="antialiased flex flex-col">
 
-    <!-- Header Section - ปรับเป็น w-full และ padding-x แทน max-w-7xl -->
-    <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-[60] transition-all w-full">
-        <div class="w-full px-4 sm:px-6 lg:px-10 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <!-- Header Section - Compact Height -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 z-[60] w-full flex-none">
+        <div class="w-full px-6 py-3 flex items-center justify-between gap-4">
             <!-- Brand -->
-            <div class="flex items-center gap-4 cursor-pointer group" onclick="switchTab('overview')">
-                <div class="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-red-600/30 group-hover:scale-105 transition-transform duration-300">
-                    <i data-lucide="zap" class="w-6 h-6 fill-current"></i>
+            <div class="flex items-center gap-3 cursor-pointer group" onclick="switchTab('overview')">
+                <div class="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-red-600/30">
+                    <i data-lucide="zap" class="w-5 h-5 fill-current"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-black tracking-tighter text-slate-800 uppercase italic leading-none">HEIM OPS</h1>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] mt-1 italic">Dashboard Self Learning • V1.5.0</p>
+                    <h1 class="text-lg font-black tracking-tighter text-slate-800 uppercase italic leading-none">HEIM OPS</h1>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest italic leading-none mt-1">V1.5.0 Premium</p>
                 </div>
             </div>
 
             <!-- Global Actions & Navigation -->
-            <div class="flex items-center flex-wrap gap-3">
-                <nav class="bg-slate-100 p-1.5 rounded-xl flex shadow-inner">
-                    <button id="tab-overview" onclick="switchTab('overview')" class="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold transition-all duration-300 tab-active">
-                        <i data-lucide="layout-grid" class="w-4 h-4"></i> <span>ภาพรวม</span>
+            <div class="flex items-center gap-3">
+                <nav class="bg-slate-100 p-1 rounded-lg flex shadow-inner">
+                    <button id="tab-overview" onclick="switchTab('overview')" class="flex items-center gap-2 px-4 py-1.5 rounded-md text-[11px] font-bold transition-all duration-300 tab-active">
+                        <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> <span>ภาพรวม</span>
                     </button>
-                    <button id="tab-earlybird" onclick="switchTab('earlybird')" class="flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold transition-all duration-300 text-slate-500 hover:text-slate-800">
-                        <i data-lucide="trophy" class="w-4 h-4"></i> <span>Hall of Fame</span>
+                    <button id="tab-earlybird" onclick="switchTab('earlybird')" class="flex items-center gap-2 px-4 py-1.5 rounded-md text-[11px] font-bold transition-all duration-300 text-slate-500 hover:text-slate-800">
+                        <i data-lucide="trophy" class="w-3.5 h-3.5"></i> <span>Hall of Fame</span>
                     </button>
                 </nav>
                 
-                <div class="h-8 w-px bg-slate-200 mx-1 hidden lg:block"></div>
-                
-                <div class="flex items-center gap-2">
-                    <button onclick="captureScreen()" class="p-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all shadow-sm" title="Capture Image">
-                        <i data-lucide="camera" class="w-4 h-4"></i>
+                <div class="flex items-center gap-1.5">
+                    <button onclick="captureScreen()" class="p-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-all shadow-sm" title="Capture Image">
+                        <i data-lucide="camera" class="w-3.5 h-3.5"></i>
                     </button>
-                    <button onclick="toggleImportModal()" class="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold shadow-lg shadow-slate-900/20 hover:bg-black transition-all">
-                        <i data-lucide="database" class="w-4 h-4 text-red-500"></i> จัดการข้อมูล
+                    <button onclick="toggleImportModal()" class="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-[11px] font-bold shadow-lg shadow-slate-900/20 hover:bg-black transition-all">
+                        <i data-lucide="database" class="w-3.5 h-3.5 text-red-500"></i> จัดการข้อมูล
                     </button>
-                    <button onclick="clearData()" class="p-2.5 text-slate-400 hover:text-red-600 transition-colors" title="Clear All Data">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    <button onclick="clearData()" class="p-2 text-slate-300 hover:text-red-600 transition-colors" title="Clear All Data">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                     </button>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Main Section - ปรับเป็น w-full และ padding-x แทน max-w-7xl -->
-    <main id="capture-area" class="w-full px-4 sm:px-6 lg:px-10 py-8 transition-all">
+    <!-- Main Content Area - Full height, no scroll -->
+    <main id="capture-area" class="flex-1 flex flex-col p-4 gap-4 overflow-hidden">
         
-        <!-- Smart Filters Section -->
-        <section class="bg-white rounded-3xl shadow-sm border border-slate-200/60 p-5 mb-8 flex flex-col md:flex-row items-center gap-4 transition-all print:hidden">
-            <div class="flex flex-wrap items-center gap-4 flex-1 w-full">
-                <!-- Year Selector -->
-                <div class="space-y-1 w-full sm:w-auto">
-                    <label class="text-[9px] font-black uppercase text-slate-400 px-1 italic">Year Selection</label>
-                    <div class="relative">
-                        <i data-lucide="calendar" class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400"></i>
-                        <select id="filter-year" onchange="runAnalysis()" class="appearance-none bg-slate-50 border border-slate-100 rounded-xl text-[12px] font-bold py-2.5 pl-9 pr-8 focus:ring-2 focus:ring-red-500/20 focus:bg-white outline-none w-full cursor-pointer transition-all">
-                            <option value="2026" selected>2026</option>
-                            <option value="2025">2025</option>
-                            <option value="2024">2024</option>
-                        </select>
-                    </div>
+        <!-- Smart Filters Section - Compact -->
+        <section class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-3 flex items-center gap-3 flex-none">
+            <div class="flex items-center gap-3 flex-1">
+                <div class="relative min-w-[100px]">
+                    <i data-lucide="calendar" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400"></i>
+                    <select id="filter-year" onchange="runAnalysis()" class="appearance-none bg-slate-50 border border-slate-100 rounded-lg text-[11px] font-bold py-1.5 pl-8 pr-6 focus:ring-2 focus:ring-red-500/10 focus:bg-white outline-none w-full cursor-pointer transition-all">
+                        <option value="2026" selected>2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                    </select>
                 </div>
-
-                <!-- Month Selector -->
-                <div class="space-y-1 w-full sm:w-auto">
-                    <label class="text-[9px] font-black uppercase text-slate-400 px-1 italic">Time Range</label>
-                    <div class="relative">
-                        <i data-lucide="clock" class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400"></i>
-                        <select id="filter-month" onchange="runAnalysis()" class="appearance-none bg-slate-50 border border-slate-100 rounded-xl text-[12px] font-bold py-2.5 pl-9 pr-8 focus:ring-2 focus:ring-red-500/20 focus:bg-white outline-none w-full cursor-pointer transition-all">
-                            <option value="ALL" selected>ทุกเดือน (ทั้งปี)</option>
-                            <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option>
-                            <option value="03">มีนาคม</option><option value="04">เมษายน</option>
-                            <option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option>
-                            <option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option>
-                            <option value="09">กันยายน</option><option value="10">ตุลาคม</option>
-                            <option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
-                        </select>
-                    </div>
+                <div class="relative min-w-[130px]">
+                    <i data-lucide="clock" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400"></i>
+                    <select id="filter-month" onchange="runAnalysis()" class="appearance-none bg-slate-50 border border-slate-100 rounded-lg text-[11px] font-bold py-1.5 pl-8 pr-6 focus:ring-2 focus:ring-red-500/10 focus:bg-white outline-none w-full cursor-pointer transition-all">
+                        <option value="ALL" selected>ทุกเดือน (ทั้งปี)</option>
+                        <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option>
+                        <option value="03">มีนาคม</option><option value="04">เมษายน</option>
+                        <option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option>
+                        <option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option>
+                        <option value="09">กันยายน</option><option value="10">ตุลาคม</option>
+                        <option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+                    </select>
                 </div>
-
-                <!-- Department Selector -->
-                <div class="space-y-1 w-full sm:w-auto flex-1">
-                    <label class="text-[9px] font-black uppercase text-slate-400 px-1 italic">Department Hub</label>
-                    <div class="relative">
-                        <i data-lucide="building-2" class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400"></i>
-                        <select id="filter-dept" onchange="runAnalysis()" class="appearance-none bg-slate-50 border border-slate-100 rounded-xl text-[12px] font-bold py-2.5 pl-9 pr-8 focus:ring-2 focus:ring-red-500/20 focus:bg-white outline-none w-full cursor-pointer transition-all">
-                            <option value="ทั้งหมด">หน่วยงานทั้งหมด</option>
-                        </select>
-                    </div>
+                <div class="relative flex-1 max-w-sm">
+                    <i data-lucide="building-2" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400"></i>
+                    <select id="filter-dept" onchange="runAnalysis()" class="appearance-none bg-slate-50 border border-slate-100 rounded-lg text-[11px] font-bold py-1.5 pl-8 pr-6 focus:ring-2 focus:ring-red-500/10 focus:bg-white outline-none w-full cursor-pointer transition-all">
+                        <option value="ทั้งหมด">หน่วยงานทั้งหมด</option>
+                    </select>
                 </div>
             </div>
-
-            <!-- Search -->
-            <div class="w-full md:w-80 space-y-1">
-                <label class="text-[9px] font-black uppercase text-slate-400 px-1 italic">Search Member</label>
-                <div class="relative">
-                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300"></i>
-                    <input id="search-term" oninput="runAnalysis()" type="text" placeholder="ชื่อ-นามสกุล..." class="w-full bg-slate-50 border border-slate-100 rounded-xl text-[12px] font-bold py-2.5 pl-10 pr-4 focus:ring-2 focus:ring-red-500/20 focus:bg-white outline-none transition-all">
-                </div>
+            <div class="relative w-64">
+                <i data-lucide="search" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300"></i>
+                <input id="search-term" oninput="runAnalysis()" type="text" placeholder="ค้นหารายชื่อ..." class="w-full bg-slate-50 border border-slate-100 rounded-lg text-[11px] font-bold py-1.5 pl-8 pr-4 focus:ring-2 focus:ring-red-500/10 focus:bg-white outline-none transition-all">
             </div>
         </section>
 
         <!-- Tab Content: Overview -->
-        <div id="content-overview" class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div id="content-overview" class="flex-1 flex flex-col gap-4 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
             
-            <!-- Strategic KPI Cards -->
-            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                <!-- Total Records -->
-                <div class="bg-white p-6 rounded-[1.5rem] border border-slate-200/60 kpi-card relative overflow-hidden">
-                    <div class="absolute -right-2 -bottom-2 opacity-[0.03] rotate-12">
-                        <i data-lucide="database" class="w-20 h-20 text-slate-900"></i>
+            <!-- Strategic KPI Cards - Horizontal Grid -->
+            <div class="grid grid-cols-5 gap-3 flex-none">
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200/60 kpi-card relative overflow-hidden flex items-center gap-4">
+                    <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center flex-none">
+                        <i data-lucide="database" class="w-5 h-5 text-slate-400"></i>
                     </div>
-                    <div class="flex items-center gap-2 mb-3">
-                        <div class="w-7 h-7 bg-slate-100 rounded-lg flex items-center justify-center">
-                            <i data-lucide="database" class="w-4 h-4 text-slate-500"></i>
-                        </div>
-                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">บันทึกรวม</span>
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">บันทึกรวม</p>
+                        <h3 id="stat-total" class="text-xl font-black text-slate-900 stat-value leading-none mt-0.5">0</h3>
                     </div>
-                    <h3 id="stat-total" class="text-4xl font-black text-slate-900 stat-value">0</h3>
                 </div>
-
-                <!-- Active Learners -->
-                <div class="bg-white p-6 rounded-[1.5rem] border border-slate-200/60 kpi-card relative overflow-hidden">
-                    <div class="absolute -right-2 -bottom-2 opacity-[0.03] rotate-12">
-                        <i data-lucide="users" class="w-20 h-20 text-slate-900"></i>
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200/60 kpi-card relative overflow-hidden flex items-center gap-4">
+                    <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center flex-none">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i>
                     </div>
-                    <div class="flex items-center gap-2 mb-3">
-                        <div class="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center">
-                            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i>
-                        </div>
-                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">เรียนแล้ว (คน)</span>
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">เรียนแล้ว (คน)</p>
+                        <h3 id="stat-active" class="text-xl font-black text-emerald-600 stat-value leading-none mt-0.5">0</h3>
                     </div>
-                    <h3 id="stat-active" class="text-4xl font-black text-emerald-600 stat-value">0</h3>
                 </div>
-
-                <!-- Average Hits -->
-                <div class="bg-white p-6 rounded-[1.5rem] border border-slate-200/60 kpi-card relative overflow-hidden">
-                    <div class="absolute -right-2 -bottom-2 opacity-[0.03] rotate-12">
-                        <i data-lucide="trending-up" class="w-20 h-20 text-slate-900"></i>
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200/60 kpi-card relative overflow-hidden flex items-center gap-4">
+                    <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center flex-none">
+                        <i data-lucide="activity" class="w-5 h-5 text-blue-500"></i>
                     </div>
-                    <div class="flex items-center gap-2 mb-3">
-                        <div class="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center">
-                            <i data-lucide="activity" class="w-4 h-4 text-blue-500"></i>
-                        </div>
-                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">เฉลี่ย/คน</span>
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">เฉลี่ย/คน</p>
+                        <h3 id="stat-avg" class="text-xl font-black text-blue-600 stat-value leading-none mt-0.5">0.0</h3>
                     </div>
-                    <h3 id="stat-avg" class="text-4xl font-black text-blue-600 stat-value">0.0</h3>
                 </div>
-
-                <!-- Participation Rate -->
-                <div class="bg-white p-6 rounded-[1.5rem] border border-slate-200/60 kpi-card relative overflow-hidden">
-                    <div class="absolute -right-2 -bottom-2 opacity-[0.03] rotate-12">
-                        <i data-lucide="pie-chart" class="w-20 h-20 text-slate-900"></i>
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200/60 kpi-card relative overflow-hidden flex items-center gap-4">
+                    <div class="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center flex-none">
+                        <i data-lucide="percent" class="w-5 h-5 text-purple-500"></i>
                     </div>
-                    <div class="flex items-center gap-2 mb-3">
-                        <div class="w-7 h-7 bg-purple-50 rounded-lg flex items-center justify-center">
-                            <i data-lucide="percent" class="w-4 h-4 text-purple-500"></i>
-                        </div>
-                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">อัตราส่วน</span>
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">อัตราส่วน</p>
+                        <h3 id="stat-rate" class="text-xl font-black text-purple-600 stat-value leading-none mt-0.5">0%</h3>
                     </div>
-                    <h3 id="stat-rate" class="text-4xl font-black text-purple-600 stat-value">0%</h3>
                 </div>
-
-                <!-- Inactive Count -->
-                <div class="bg-slate-900 p-6 rounded-[1.5rem] border border-slate-800 kpi-card relative overflow-hidden col-span-2 lg:col-span-1">
-                    <div class="absolute -right-2 -bottom-2 opacity-[0.1] rotate-12">
-                        <i data-lucide="user-minus" class="w-20 h-20 text-white"></i>
+                <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 kpi-card relative overflow-hidden flex items-center gap-4">
+                    <div class="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center flex-none">
+                        <i data-lucide="alert-circle" class="w-5 h-5 text-red-500"></i>
                     </div>
-                    <div class="flex items-center gap-2 mb-3">
-                        <div class="w-7 h-7 bg-slate-800 rounded-lg flex items-center justify-center">
-                            <i data-lucide="alert-circle" class="w-4 h-4 text-red-500"></i>
-                        </div>
-                        <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">ยังไม่เรียน</span>
+                    <div>
+                        <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">ยังไม่เรียน</p>
+                        <h3 id="stat-inactive" class="text-xl font-black text-white stat-value leading-none mt-0.5">0</h3>
                     </div>
-                    <h3 id="stat-inactive" class="text-4xl font-black text-white stat-value">0</h3>
                 </div>
             </div>
 
-            <!-- Spotlight Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <!-- Grand Champion Card -->
-                <div class="lg:col-span-4 bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden flex flex-col justify-between animate-shine group border border-slate-800">
-                    <div class="absolute top-0 right-0 p-6 opacity-[0.08] group-hover:scale-110 transition-transform duration-700">
-                        <i data-lucide="award" class="w-32 h-32"></i>
-                    </div>
+            <!-- Spotlight Section - Two Rows flex -->
+            <div class="flex-1 grid grid-cols-12 gap-4 overflow-hidden">
+                <!-- Row Left: Spotlight + Charts -->
+                <div class="col-span-8 flex flex-col gap-4 overflow-hidden">
                     
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-2 mb-6">
-                            <span class="px-3 py-1 bg-yellow-400/90 text-slate-900 text-[9px] font-black uppercase italic rounded-full shadow-lg shadow-yellow-400/20">Learning Champion</span>
-                        </div>
-                        <h2 id="winner-name" class="text-5xl font-black italic tracking-tighter uppercase mb-2 leading-none">-</h2>
-                        <p id="winner-dept" class="text-slate-500 font-bold text-xs uppercase tracking-widest truncate mb-6">-</p>
-                    </div>
-
-                    <div class="relative z-10 pt-6 border-t border-slate-800 flex items-center justify-between">
-                        <div>
-                            <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] italic mb-1">Total Learning Record</p>
-                            <div class="flex items-baseline gap-2">
-                                <span id="winner-hits" class="text-5xl font-black text-white italic">0</span>
-                                <span class="text-xs font-bold text-slate-500 uppercase italic">Units</span>
+                    <!-- Spotlight Cards -->
+                    <div class="grid grid-cols-2 gap-4 h-[160px] flex-none">
+                        <!-- Grand Champion -->
+                        <div class="bg-slate-900 text-white p-5 rounded-[2rem] shadow-lg relative overflow-hidden flex flex-col justify-between animate-shine border border-slate-800">
+                            <i data-lucide="award" class="absolute top-2 right-2 w-20 h-20 opacity-[0.05]"></i>
+                            <div class="relative z-10">
+                                <span class="px-2 py-0.5 bg-yellow-400/90 text-slate-900 text-[8px] font-black uppercase italic rounded-full">Champion</span>
+                                <h2 id="winner-name" class="text-2xl font-black italic tracking-tighter uppercase truncate mt-1">-</h2>
+                                <p id="winner-dept" class="text-slate-500 font-bold text-[9px] uppercase tracking-widest truncate">-</p>
+                            </div>
+                            <div class="relative z-10 flex items-center justify-between border-t border-slate-800 pt-3">
+                                <div>
+                                    <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest italic">Record</p>
+                                    <div class="flex items-baseline gap-1 leading-none">
+                                        <span id="winner-hits" class="text-2xl font-black text-white italic">0</span>
+                                        <span class="text-[9px] font-bold text-slate-500 uppercase">Units</span>
+                                    </div>
+                                </div>
+                                <div class="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center">
+                                    <i data-lucide="medal" class="w-4 h-4 text-yellow-500"></i>
+                                </div>
                             </div>
                         </div>
-                        <div class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center">
-                            <i data-lucide="medal" class="w-6 h-6 text-yellow-500"></i>
+
+                        <!-- Speed Star -->
+                        <div class="bg-white p-5 rounded-[2rem] border border-slate-200/60 shadow-sm flex flex-col justify-between relative overflow-hidden">
+                            <i data-lucide="zap" class="absolute top-2 right-2 w-20 h-20 opacity-[0.03] text-red-600"></i>
+                            <div class="relative z-10">
+                                <div class="flex items-center gap-2">
+                                    <span id="early-month-label" class="px-2 py-0.5 bg-red-600 text-white text-[8px] font-black uppercase italic rounded-full">-</span>
+                                    <span class="text-[8px] font-black text-slate-400 uppercase italic tracking-widest leading-none">Speed Star</span>
+                                </div>
+                                <h2 id="early-name" class="text-2xl font-black italic tracking-tighter uppercase truncate mt-1 text-slate-800">-</h2>
+                                <p id="early-time" class="text-red-600 font-black text-[9px] uppercase tracking-widest italic mt-1 truncate">First: -</p>
+                            </div>
+                            <div class="relative z-10 flex items-center justify-between border-t border-slate-100 pt-3">
+                                <p class="text-[9px] font-bold text-slate-400 italic leading-none">🏆 ผู้บันทึกคนแรกของช่วงเวลานี้</p>
+                                <div class="w-8 h-8 bg-slate-50 rounded-full flex items-center justify-center">
+                                    <i data-lucide="clock-3" class="w-4 h-4 text-red-500"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visual Charts Area -->
+                    <div class="flex-1 grid grid-cols-2 gap-4 overflow-hidden">
+                        <div class="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-200/60 flex flex-col overflow-hidden">
+                            <div class="flex items-center justify-between mb-2 px-1">
+                                <h3 class="text-[11px] font-black text-slate-800 uppercase italic tracking-tight">Performance Ranking</h3>
+                                <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-slate-300"></i>
+                            </div>
+                            <div class="flex-1 min-h-0">
+                                <canvas id="learnerChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-200/60 flex flex-col overflow-hidden">
+                            <div class="flex items-center justify-between mb-2 px-1">
+                                <h3 class="text-[11px] font-black text-slate-800 uppercase italic tracking-tight">Growth Tendency</h3>
+                                <div class="flex items-center gap-2 text-[8px] font-bold text-slate-400">
+                                    <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Current</span>
+                                    <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-red-400"></span> Previous</span>
+                                </div>
+                            </div>
+                            <div class="flex-1 min-h-0">
+                                <canvas id="tendencyChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Monthly Speed Star Card -->
-                <div class="lg:col-span-4 bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm flex flex-col justify-between relative overflow-hidden group">
-                    <div class="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:scale-110 transition-transform duration-700">
-                        <i data-lucide="zap" class="w-32 h-32 text-red-600"></i>
-                    </div>
-
-                    <div class="relative z-10">
-                        <div class="flex items-center gap-3 mb-6">
-                            <span id="early-month-label" class="px-3 py-1 bg-red-600 text-white text-[9px] font-black uppercase italic rounded-full shadow-lg shadow-red-600/20">-</span>
-                            <span class="text-[9px] font-black text-slate-400 uppercase italic tracking-widest">Monthly Speed Star</span>
-                        </div>
-                        <h2 id="early-name" class="text-5xl font-black italic tracking-tighter uppercase mb-2 leading-none text-slate-800">-</h2>
-                        <div class="flex items-center gap-2 text-red-600 font-black text-[11px] uppercase tracking-widest italic">
-                            <i data-lucide="clock-3" class="w-4 h-4"></i>
-                            <span id="early-time">First Record: -</span>
-                        </div>
-                    </div>
-
-                    <div class="relative z-10 pt-6 border-t border-slate-100 mt-8">
-                        <p class="text-[10px] font-bold text-slate-400 mb-4 italic">🏆 ผู้บันทึกคนแรกของช่วงเวลาที่เลือก</p>
-                        <div class="flex -space-x-2">
-                            <div class="w-8 h-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] font-bold">🎯</div>
-                            <div class="w-8 h-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] font-bold">🚀</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pending Learner List -->
-                <div class="lg:col-span-4 bg-white p-6 rounded-[2.5rem] border border-slate-200/60 shadow-sm flex flex-col h-[450px]">
-                    <div class="flex items-center justify-between mb-5 px-2">
-                        <h3 class="text-xs font-black text-slate-800 flex items-center gap-2 uppercase italic tracking-tight">
-                            <i data-lucide="user-x" class="text-orange-600 w-4 h-4"></i> 
+                <!-- Row Right: Pending List (Scrollable internal) -->
+                <div class="col-span-4 bg-white p-4 rounded-[2rem] border border-slate-200/60 shadow-sm flex flex-col overflow-hidden">
+                    <div class="flex items-center justify-between mb-3 px-2 flex-none">
+                        <h3 class="text-[11px] font-black text-slate-800 flex items-center gap-2 uppercase italic">
+                            <i data-lucide="user-x" class="text-orange-600 w-3.5 h-3.5"></i> 
                             <span>Pending Learners</span>
                         </h3>
-                        <span id="pending-count-label" class="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-lg uppercase">0 Persons</span>
+                        <span id="pending-count-label" class="px-2 py-0.5 bg-slate-100 text-slate-500 text-[9px] font-bold rounded-lg uppercase">0 Persons</span>
                     </div>
-                    <div id="inactive-list-summary" class="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-2">
-                        <!-- JS Injected: All Inactive -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Visual Analytics Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-10">
-                <!-- Chart 1: Top Performers -->
-                <div class="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-200/60 transition-all hover:shadow-md">
-                    <div class="flex items-center justify-between mb-8">
-                        <div>
-                            <h3 class="text-sm font-black text-slate-800 uppercase italic tracking-tight">Individual Performance</h3>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase italic mt-1">Top 10 Active Members</p>
-                        </div>
-                        <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center">
-                            <i data-lucide="bar-chart-3" class="w-5 h-5 text-slate-400"></i>
-                        </div>
-                    </div>
-                    <div class="h-[400px]">
-                        <canvas id="learnerChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Chart 2: Time Tendency (3-Year Comparison) -->
-                <div class="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-200/60 transition-all hover:shadow-md">
-                    <div class="flex items-center justify-between mb-8">
-                        <div>
-                            <h3 class="text-sm font-black text-slate-800 uppercase italic tracking-tight">Growth Tendency</h3>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase italic mt-1">3-Year Historical Comparison</p>
-                        </div>
-                        <div class="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 max-w-[240px]">
-                            <div class="flex items-center gap-1.5 text-[9px] font-bold text-slate-400 italic">
-                                <span class="w-2.5 h-0.5 bg-blue-500"></span> <span id="label-year-0">2026</span>
-                            </div>
-                            <div class="flex items-center gap-1.5 text-[9px] font-bold text-slate-400 italic">
-                                <span class="w-2.5 h-0.5 border-t-2 border-dashed border-red-400"></span> <span id="label-year-1">2025</span>
-                            </div>
-                            <div class="flex items-center gap-1.5 text-[9px] font-bold text-slate-400 italic">
-                                <span class="w-2.5 h-0.5 border-t-2 border-dotted border-slate-400"></span> <span id="label-year-2">2024</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="h-[400px]">
-                        <canvas id="tendencyChart"></canvas>
+                    <div id="inactive-list-summary" class="flex-1 overflow-y-auto custom-scrollbar space-y-1.5 pr-1">
+                        <!-- JS Injected -->
                     </div>
                 </div>
             </div>
-
         </div>
 
-        <!-- Tab Content: Hall of Fame (Early Bird History) -->
-        <div id="content-earlybird" class="hidden animate-in fade-in zoom-in-95 duration-500">
-            <div class="bg-white p-10 lg:p-16 rounded-[4rem] border border-slate-200 shadow-sm text-center">
-                <div class="max-w-4xl mx-auto mb-16">
-                    <div class="w-16 h-16 bg-red-50 text-red-600 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-red-100">
-                        <i data-lucide="crown" class="w-8 h-8"></i>
-                    </div>
-                    <h3 class="text-4xl font-black italic tracking-tighter uppercase mb-4">Monthly Speed Stars</h3>
-                    <p class="text-slate-400 text-sm font-bold uppercase tracking-widest italic">Hall of Fame • Annual Timeline</p>
+        <!-- Tab Content: Hall of Fame (Grid Scrollable) -->
+        <div id="content-earlybird" class="hidden flex-1 overflow-hidden animate-in fade-in zoom-in-95 duration-500">
+            <div class="bg-white h-full p-6 rounded-[2.5rem] border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+                <div class="text-center mb-6 flex-none">
+                    <h3 class="text-2xl font-black italic tracking-tighter uppercase">Monthly Speed Stars</h3>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest italic">Hall of Fame • Timeline</p>
                 </div>
-                
-                <div id="earlybird-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div id="earlybird-grid" class="flex-1 overflow-y-auto custom-scrollbar grid grid-cols-4 gap-3 p-2">
                     <!-- JS Injected -->
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Enhanced Import Modal -->
+    <!-- Import Modal -->
     <div id="import-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onclick="toggleImportModal()"></div>
-        <div class="bg-white w-full max-w-xl rounded-[3rem] shadow-2xl p-10 border border-slate-200 relative z-10 animate-in zoom-in-95 duration-300">
-            <div class="flex items-center justify-between mb-10">
-                <div>
-                    <h3 class="text-2xl font-black text-slate-800 italic uppercase leading-none">Data Hub</h3>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest italic">Import your Learning System files</p>
-                </div>
-                <button onclick="toggleImportModal()" class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 hover:text-red-600 transition-all">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="toggleImportModal()"></div>
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl p-8 border border-slate-200 relative z-10 animate-in zoom-in-95 duration-300">
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="text-xl font-black text-slate-800 italic uppercase leading-none">Data Management</h3>
+                <button onclick="toggleImportModal()" class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 hover:text-red-600 transition-all">
+                    <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <!-- Import Members -->
-                <div onclick="document.getElementById('file-members').click()" class="bg-slate-50 p-8 rounded-[2rem] border-2 border-dashed border-slate-200 cursor-pointer group hover:border-red-500 hover:bg-red-50/30 transition-all text-center">
-                    <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm group-hover:scale-110 transition-transform">
-                        <i data-lucide="users" class="w-7 h-7 text-slate-300 group-hover:text-red-500"></i>
-                    </div>
-                    <p class="font-black text-slate-800 text-xs italic uppercase mb-1">Members List</p>
-                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tight">รายชื่อพนักงานทั้งหมด</p>
+            <div class="grid grid-cols-2 gap-4">
+                <div onclick="document.getElementById('file-members').click()" class="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-slate-200 cursor-pointer group hover:border-red-500 hover:bg-red-50/30 transition-all text-center">
+                    <i data-lucide="users" class="w-8 h-8 text-slate-300 group-hover:text-red-500 mx-auto mb-2"></i>
+                    <p class="font-black text-slate-800 text-[10px] italic uppercase">Members List</p>
                     <input type="file" id="file-members" class="hidden" accept=".xlsx,.xls,.csv" onchange="handleFile(event, 'members')">
                 </div>
-
-                <!-- Import Records -->
-                <div onclick="document.getElementById('file-records').click()" class="bg-slate-50 p-8 rounded-[2rem] border-2 border-dashed border-slate-200 cursor-pointer group hover:border-red-500 hover:bg-red-50/30 transition-all text-center">
-                    <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm group-hover:scale-110 transition-transform">
-                        <i data-lucide="history" class="w-7 h-7 text-slate-300 group-hover:text-red-500"></i>
-                    </div>
-                    <p class="font-black text-slate-800 text-xs italic uppercase mb-1">Learning Records</p>
-                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-tight">ประวัติการบันทึกการเรียนรู้</p>
+                <div onclick="document.getElementById('file-records').click()" class="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-slate-200 cursor-pointer group hover:border-red-500 hover:bg-red-50/30 transition-all text-center">
+                    <i data-lucide="history" class="w-8 h-8 text-slate-300 group-hover:text-red-500 mx-auto mb-2"></i>
+                    <p class="font-black text-slate-800 text-[10px] italic uppercase">Learning Records</p>
                     <input type="file" id="file-records" class="hidden" accept=".xlsx,.xls,.csv" onchange="handleFile(event, 'records')">
                 </div>
-            </div>
-
-            <div class="mt-8 pt-8 border-t border-slate-100 flex items-start gap-3">
-                <i data-lucide="info" class="w-4 h-4 text-slate-400 mt-0.5"></i>
-                <p class="text-[10px] text-slate-400 font-bold leading-relaxed italic">
-                    รองรับไฟล์ Excel (.xlsx, .xls) และ CSV โดยระบบจะตรวจสอบหัวข้อ "Name" และ "Department" อัตโนมัติ ข้อมูลจะถูกจัดเก็บไว้ใน Browser ของคุณ
-                </p>
             </div>
         </div>
     </div>
 
     <script>
-        // Core State Management
         let members = [];
         let records = [];
         let tendencyChart, learnerChart;
@@ -448,49 +350,26 @@
         function switchTab(tab) {
             document.getElementById('content-overview').classList.toggle('hidden', tab !== 'overview');
             document.getElementById('content-earlybird').classList.toggle('hidden', tab !== 'earlybird');
-            
-            document.getElementById('tab-overview').className = `flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold transition-all duration-300 ${tab === 'overview' ? 'tab-active' : 'text-slate-500 hover:text-slate-800'}`;
-            document.getElementById('tab-earlybird').className = `flex items-center gap-2 px-5 py-2 rounded-lg text-xs font-bold transition-all duration-300 ${tab === 'earlybird' ? 'tab-active' : 'text-slate-500 hover:text-slate-800'}`;
-            
-            if(tab === 'overview') {
-                runAnalysis();
-            } else {
-                renderEarlyBirds();
-            }
+            document.getElementById('tab-overview').className = `flex items-center gap-2 px-4 py-1.5 rounded-md text-[11px] font-bold transition-all duration-300 ${tab === 'overview' ? 'tab-active' : 'text-slate-500 hover:text-slate-800'}`;
+            document.getElementById('tab-earlybird').className = `flex items-center gap-2 px-4 py-1.5 rounded-md text-[11px] font-bold transition-all duration-300 ${tab === 'earlybird' ? 'tab-active' : 'text-slate-500 hover:text-slate-800'}`;
+            if(tab === 'overview') runAnalysis(); else renderEarlyBirds();
         }
 
-        function toggleImportModal() {
-            const modal = document.getElementById('import-modal');
-            modal.classList.toggle('hidden');
-        }
+        function toggleImportModal() { document.getElementById('import-modal').classList.toggle('hidden'); }
 
         async function captureScreen() {
             const captureArea = document.getElementById('capture-area');
             const captureBtn = document.querySelector('[onclick="captureScreen()"]');
-            
-            captureBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>';
+            captureBtn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i>';
             lucide.createIcons();
-
             try {
-                const canvas = await html2canvas(captureArea, {
-                    scale: 2,
-                    backgroundColor: '#f8fafc',
-                    useCORS: true,
-                    logging: false,
-                    onclone: (clonedDoc) => {
-                        const content = clonedDoc.getElementById('content-overview');
-                        if (content) content.classList.remove('hidden');
-                    }
-                });
-                
+                const canvas = await html2canvas(captureArea, { scale: 2, backgroundColor: '#f8fafc', useCORS: true });
                 const link = document.createElement('a');
                 link.download = `HEIM-Report-${new Date().toISOString().split('T')[0]}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
-            } catch (err) {
-                console.error("Capture failed:", err);
             } finally {
-                captureBtn.innerHTML = '<i data-lucide="camera" class="w-4 h-4"></i>';
+                captureBtn.innerHTML = '<i data-lucide="camera" class="w-3.5 h-3.5"></i>';
                 lucide.createIcons();
             }
         }
@@ -498,62 +377,38 @@
         function handleFile(event, type) {
             const file = event.target.files[0];
             if (!file) return;
-            
             const reader = new FileReader();
             reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const json = XLSX.utils.sheet_to_json(sheet);
-                
+                const workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
                 if(type === 'members') {
-                    members = json.map(m => ({
-                        name: String(m.Name || m.name || m['ชื่อพนักงาน'] || m['ชื่อ'] || "Unknown"),
-                        dept: String(m.Department || m.department || m['แผนก'] || "ไม่ระบุ")
-                    })).filter(m => m.name !== "Unknown");
+                    members = json.map(m => ({ name: String(m.Name || m.name || m['ชื่อ'] || ""), dept: String(m.Department || m.department || m['แผนก'] || "") })).filter(m => m.name);
                     localStorage.setItem('scg_heim_members_v2', JSON.stringify(members));
                 } else {
-                    records = json.map(r => ({
-                        Name: String(r.Name || r.name || r['ชื่อพนักงาน'] || "Unknown"),
-                        Department: String(r.Department || r.department || r['แผนก'] || "ไม่ระบุ"),
-                        CreatedDateTime: String(r.CreatedDateTime || r.createddatetime || r['วันที่บันทึก'] || "")
-                    }));
+                    records = json.map(r => ({ Name: String(r.Name || r.name || ""), Department: String(r.Department || r.department || ""), CreatedDateTime: String(r.CreatedDateTime || r.createddatetime || "") }));
                     localStorage.setItem('scg_heim_records_v2', JSON.stringify(records));
                 }
-                
-                populateDepts();
-                runAnalysis();
-                toggleImportModal();
+                populateDepts(); runAnalysis(); toggleImportModal();
             };
             reader.readAsArrayBuffer(file);
         }
 
         function loadFromStorage() {
-            const m = localStorage.getItem('scg_heim_members_v2') || localStorage.getItem('scg_heim_members');
-            const r = localStorage.getItem('scg_heim_records_v2') || localStorage.getItem('scg_heim_records');
+            const m = localStorage.getItem('scg_heim_members_v2');
+            const r = localStorage.getItem('scg_heim_records_v2');
             if(m) members = JSON.parse(m);
             if(r) records = JSON.parse(r);
             populateDepts();
         }
 
-        function clearData() {
-            if(confirm("คำเตือน: ล้างข้อมูลทั้งหมดในระบบ?")) {
-                localStorage.removeItem('scg_heim_members_v2');
-                localStorage.removeItem('scg_heim_records_v2');
-                location.reload();
-            }
-        }
+        function clearData() { if(confirm("Clear all data?")) { localStorage.clear(); location.reload(); } }
 
         function populateDepts() {
             const allDepts = ["ทั้งหมด", ...new Set([...members.map(m => m.dept), ...records.map(r => r.Department)])].sort();
             const select = document.getElementById('filter-dept');
             if(select) {
-                select.innerHTML = allDepts.map(d => `<option value="${d}">${d === 'ทั้งหมด' ? 'หน่วยงานทั้งหมด' : d}</option>`).join('');
-                
-                // Set Default Dept if exists in the data
-                if (allDepts.includes(DEFAULT_DEPT)) {
-                    select.value = DEFAULT_DEPT;
-                }
+                select.innerHTML = allDepts.map(d => `<option value="${d}">${d}</option>`).join('');
+                if (allDepts.includes(DEFAULT_DEPT)) select.value = DEFAULT_DEPT;
             }
         }
 
@@ -563,263 +418,86 @@
             const dept = document.getElementById('filter-dept').value;
             const search = document.getElementById('search-term').value.toLowerCase();
 
-            // Filter Main Logic
             const filtered = records.filter(r => {
                 const dt = String(r.CreatedDateTime);
-                const matchYear = dt.startsWith(year);
-                const matchMonth = month === 'ALL' || dt.includes(`-${month}-`);
-                const matchDept = dept === 'ทั้งหมด' || r.Department === dept;
-                const matchSearch = r.Name.toLowerCase().includes(search);
-                return matchYear && matchMonth && matchDept && matchSearch;
+                return dt.startsWith(year) && (month === 'ALL' || dt.includes(`-${month}-`)) && (dept === 'ทั้งหมด' || r.Department === dept) && r.Name.toLowerCase().includes(search);
             });
 
             const targetPool = members.filter(m => dept === 'ทั้งหมด' || m.dept === dept);
-            const activeNamesInFilter = new Set(filtered.map(r => r.Name));
-            const activeCount = targetPool.filter(m => activeNamesInFilter.has(m.name)).length;
+            const activeNames = new Set(filtered.map(r => r.Name));
+            const activeCount = targetPool.filter(m => activeNames.has(m.name)).length;
             const inactiveCount = targetPool.length - activeCount;
-            const rate = targetPool.length > 0 ? (activeCount / targetPool.length) * 100 : 0;
-            const avg = activeCount > 0 ? filtered.length / activeCount : 0;
 
-            // UI Update: Stats
-            animateValue("stat-total", filtered.length);
-            animateValue("stat-active", activeCount);
-            document.getElementById('stat-avg').innerText = avg.toFixed(1);
-            document.getElementById('stat-rate').innerText = Math.round(rate) + "%";
-            animateValue("stat-inactive", inactiveCount);
+            document.getElementById('stat-total').innerText = filtered.length.toLocaleString();
+            document.getElementById('stat-active').innerText = activeCount.toLocaleString();
+            document.getElementById('stat-avg').innerText = activeCount > 0 ? (filtered.length / activeCount).toFixed(1) : "0.0";
+            document.getElementById('stat-rate').innerText = targetPool.length > 0 ? Math.round((activeCount / targetPool.length) * 100) + "%" : "0%";
+            document.getElementById('stat-inactive').innerText = inactiveCount.toLocaleString();
             document.getElementById('pending-count-label').innerText = inactiveCount.toLocaleString() + " Persons";
 
-            // Winner Logic
-            const userCounts = {};
-            filtered.forEach(r => userCounts[r.Name] = (userCounts[r.Name] || 0) + 1);
-            const sortedUsers = Object.entries(userCounts).map(([name, count]) => {
-                const m = members.find(mem => mem.name === name);
-                return { name, count, dept: m ? m.dept : "ไม่ระบุ" };
-            }).sort((a,b) => b.count - a.count);
+            const userCounts = {}; filtered.forEach(r => userCounts[r.Name] = (userCounts[r.Name] || 0) + 1);
+            const sortedUsers = Object.entries(userCounts).map(([name, count]) => ({ name, count, dept: (members.find(m => m.name === name) || {}).dept || "ไม่ระบุ" })).sort((a,b) => b.count - a.count);
 
             const winner = sortedUsers[0];
             document.getElementById('winner-name').innerText = winner ? winner.name : "-";
             document.getElementById('winner-dept').innerText = winner ? winner.dept : "-";
             document.getElementById('winner-hits').innerText = winner ? winner.count.toLocaleString() : "0";
 
-            // Early Bird Logic
-            const timeSorted = [...filtered].sort((a,b) => new Date(a.CreatedDateTime) - new Date(b.CreatedDateTime));
-            const first = timeSorted[0];
+            const first = [...filtered].sort((a,b) => new Date(a.CreatedDateTime) - new Date(b.CreatedDateTime))[0];
             if(first) {
-                const dtObj = new Date(first.CreatedDateTime);
-                const mIdx = dtObj.getMonth();
-                document.getElementById('early-month-label').innerText = month === 'ALL' ? 'Annual Legend' : MONTH_NAMES[mIdx];
+                document.getElementById('early-month-label').innerText = month === 'ALL' ? 'Annual' : MONTH_NAMES[new Date(first.CreatedDateTime).getMonth()];
                 document.getElementById('early-name').innerText = first.Name;
-                document.getElementById('early-time').innerText = `Record: ${first.CreatedDateTime}`;
+                document.getElementById('early-time').innerText = `Date: ${first.CreatedDateTime}`;
             } else {
-                document.getElementById('early-month-label').innerText = "Empty Data";
-                document.getElementById('early-name').innerText = "-";
-                document.getElementById('early-time').innerText = "No Records found";
+                document.getElementById('early-name').innerText = "-"; document.getElementById('early-time').innerText = "No Records";
             }
 
-            // Pending List UI
-            const pendingList = targetPool.filter(m => !activeNamesInFilter.has(m.name));
-            document.getElementById('inactive-list-summary').innerHTML = pendingList.length > 0 ? pendingList.map(m => `
-                <div class="group flex items-center justify-between p-3 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-orange-200 hover:bg-white transition-all">
-                    <div class="flex items-center gap-3">
-                        <div class="w-2 h-2 rounded-full bg-slate-200 group-hover:bg-orange-400"></div>
-                        <div>
-                            <p class="text-[11px] font-bold text-slate-700 truncate w-60">${m.name}</p>
-                            <p class="text-[9px] text-slate-400 font-bold uppercase italic">${m.dept}</p>
-                        </div>
+            const pendingList = targetPool.filter(m => !activeNames.has(m.name));
+            document.getElementById('inactive-list-summary').innerHTML = pendingList.map(m => `
+                <div class="flex items-center justify-between p-2.5 bg-slate-50/50 rounded-xl border border-slate-100">
+                    <div class="truncate pr-2">
+                        <p class="text-[10px] font-bold text-slate-700 truncate leading-none">${m.name}</p>
+                        <p class="text-[8px] text-slate-400 font-bold uppercase italic mt-1 truncate">${m.dept}</p>
                     </div>
-                    <span class="text-[8px] border border-slate-200 text-slate-400 px-2 py-0.5 rounded-full uppercase font-black italic tracking-tighter">Inactive</span>
-                </div>`).join('') : '<div class="text-center py-10 opacity-20"><i data-lucide="check-circle" class="w-12 h-12 mx-auto mb-2"></i><p class="text-[10px] font-black uppercase italic">Full Learning Completed!</p></div>';
+                    <span class="text-[7px] border border-slate-200 text-slate-400 px-1.5 py-0.5 rounded-full uppercase font-black">Pending</span>
+                </div>`).join('') || '<div class="text-center py-10 opacity-20 text-[10px] font-bold">ALL COMPLETED</div>';
 
-            // Charts
-            renderLearnerChart(sortedUsers.slice(0, 10));
-            renderTendencyChart(year);
+            renderCharts(sortedUsers.slice(0, 10), year);
             lucide.createIcons();
         }
 
-        function animateValue(id, value) {
-            const obj = document.getElementById(id);
-            const start = parseInt(obj.innerText.replace(/,/g, '')) || 0;
-            const duration = 800;
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                obj.innerHTML = Math.floor(progress * (value - start) + start).toLocaleString();
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                }
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        function renderLearnerChart(topUsers) {
-            const ctx = document.getElementById('learnerChart');
-            if(!ctx) return;
+        function renderCharts(topUsers, targetYear) {
+            const ctxL = document.getElementById('learnerChart');
             if(learnerChart) learnerChart.destroy();
-            
-            learnerChart = new Chart(ctx, {
+            learnerChart = new Chart(ctxL, {
                 type: 'bar',
-                data: {
-                    labels: topUsers.map(u => u.name),
-                    datasets: [{
-                        label: 'Learning Hits',
-                        data: topUsers.map(u => u.count),
-                        backgroundColor: topUsers.map((_, i) => i === 0 ? '#ef4444' : (i < 3 ? '#1e293b' : '#f1f5f9')),
-                        borderRadius: 8,
-                        barThickness: 24
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: '#0f172a',
-                            titleFont: { size: 12, weight: 'bold' },
-                            bodyFont: { size: 10 },
-                            padding: 10,
-                            displayColors: false
-                        }
-                    },
-                    scales: {
-                        x: { display: false },
-                        y: { 
-                            grid: { display: false }, 
-                            ticks: { 
-                                font: { size: 12, weight: 'bold', family: "'Public Sans'" }, 
-                                color: '#64748b' 
-                            } 
-                        }
-                    }
-                }
+                data: { labels: topUsers.map(u => u.name), datasets: [{ data: topUsers.map(u => u.count), backgroundColor: '#ef4444', borderRadius: 4, barThickness: 10 }] },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { ticks: { font: { size: 9, weight: 'bold' }, color: '#94a3b8' }, grid: { display: false } } } }
             });
-        }
 
-        function renderTendencyChart(targetYear) {
-            const ctx = document.getElementById('tendencyChart');
-            if(!ctx) return;
-            
-            const year0 = targetYear;
-            const year1 = String(parseInt(year0) - 1);
-            const year2 = String(parseInt(year0) - 2);
-
-            // Update UI Labels
-            document.getElementById('label-year-0').innerText = year0;
-            document.getElementById('label-year-1').innerText = year1;
-            document.getElementById('label-year-2').innerText = year2;
-            
-            const getYearlyData = (y) => {
-                return MONTH_SHORT.map((_, i) => {
-                    const monthStr = `-${String(i+1).padStart(2,'0')}-`;
-                    return records.filter(r => String(r.CreatedDateTime).startsWith(y) && String(r.CreatedDateTime).includes(monthStr)).length;
-                });
-            };
-
+            const ctxT = document.getElementById('tendencyChart');
+            const getYearly = (y) => MONTH_SHORT.map((_, i) => records.filter(r => String(r.CreatedDateTime).startsWith(y) && String(r.CreatedDateTime).includes(`-${String(i+1).padStart(2,'0')}-`)).length);
             if(tendencyChart) tendencyChart.destroy();
-            tendencyChart = new Chart(ctx, {
+            tendencyChart = new Chart(ctxT, {
                 type: 'line',
-                data: { 
-                    labels: MONTH_SHORT, 
-                    datasets: [
-                        { 
-                            label: year0, 
-                            data: getYearlyData(year0), 
-                            borderColor: '#3b82f6', 
-                            backgroundColor: 'rgba(59, 130, 246, 0.08)', 
-                            fill: true, 
-                            tension: 0.45, 
-                            borderWidth: 5, 
-                            pointRadius: 5,
-                            pointBackgroundColor: '#fff',
-                            pointBorderWidth: 2,
-                            z: 3
-                        },
-                        { 
-                            label: year1, 
-                            data: getYearlyData(year1), 
-                            borderColor: '#ef4444', 
-                            borderDash: [6, 4], 
-                            fill: false, 
-                            tension: 0.45, 
-                            borderWidth: 3, 
-                            pointRadius: 3,
-                            pointBackgroundColor: '#ef4444',
-                            z: 2
-                        },
-                        { 
-                            label: year2, 
-                            data: getYearlyData(year2), 
-                            borderColor: '#94a3b8', 
-                            borderDash: [2, 3], 
-                            fill: false, 
-                            tension: 0.45, 
-                            borderWidth: 2, 
-                            pointRadius: 0,
-                            z: 1
-                        }
-                    ]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            backgroundColor: '#0f172a',
-                            titleFont: { size: 14, weight: 'bold' },
-                            bodyFont: { size: 12 },
-                            padding: 14,
-                            callbacks: {
-                                label: function(context) {
-                                    return ` ปี ${context.dataset.label}: ${context.parsed.y} บันทึก`;
-                                }
-                            }
-                        }
-                    }, 
-                    scales: { 
-                        y: { 
-                            beginAtZero: true,
-                            grid: { color: '#f1f5f9' },
-                            ticks: { 
-                                font: { size: 11, weight: 'bold' }, 
-                                color: '#94a3b8',
-                                padding: 10
-                            } 
-                        }, 
-                        x: { 
-                            grid: { display: false }, 
-                            ticks: { font: { size: 12, weight: 'bold' }, color: '#94a3b8' } 
-                        } 
-                    }
-                }
+                data: { labels: MONTH_SHORT, datasets: [
+                    { label: targetYear, data: getYearly(targetYear), borderColor: '#3b82f6', tension: 0.4, borderWidth: 3, pointRadius: 2 },
+                    { label: targetYear-1, data: getYearly(String(targetYear-1)), borderColor: '#ef4444', borderDash: [4,4], tension: 0.4, borderWidth: 1.5, pointRadius: 0 }
+                ]},
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: true, ticks: { font: { size: 8 } } }, x: { grid: { display: false }, ticks: { font: { size: 9 } } } } }
             });
         }
 
         function renderEarlyBirds() {
             const year = document.getElementById('filter-year').value;
-            const grid = document.getElementById('earlybird-grid');
-            
-            grid.innerHTML = MONTH_NAMES.map((m, i) => {
-                const monthStr = `-${String(i+1).padStart(2,'0')}-`;
-                const monthly = records.filter(r => String(r.CreatedDateTime).startsWith(year) && String(r.CreatedDateTime).includes(monthStr))
-                                       .sort((a,b) => new Date(a.CreatedDateTime) - new Date(b.CreatedDateTime));
-                
-                const top = monthly[0] || null;
-                
-                return `
-                <div class="p-8 rounded-[2.5rem] border border-slate-100 bg-white group transition-all duration-500 hover:shadow-xl hover:border-red-100 ${!top ? 'opacity-30' : ''} text-center relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-24 h-24 bg-red-50 rounded-bl-full -mr-12 -mt-12 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-                    <span class="px-4 py-1 bg-slate-50 text-slate-500 rounded-full text-[10px] font-black uppercase mb-6 inline-block tracking-widest">${m}</span>
-                    <h4 class="text-2xl font-black text-slate-800 truncate mb-2 leading-tight">${top ? top.Name : 'No Entry'}</h4>
-                    <p class="text-xs text-red-600 font-bold uppercase italic">${top ? top.CreatedDateTime : '-'}</p>
-                    ${top ? '<i data-lucide="zap" class="w-5 h-5 text-red-500 mx-auto mt-4 opacity-40 group-hover:opacity-100 group-hover:scale-125 transition-all"></i>' : ''}
+            document.getElementById('earlybird-grid').innerHTML = MONTH_NAMES.map((m, i) => {
+                const top = records.filter(r => String(r.CreatedDateTime).startsWith(year) && String(r.CreatedDateTime).includes(`-${String(i+1).padStart(2,'0')}-`)).sort((a,b) => new Date(a.CreatedDateTime) - new Date(b.CreatedDateTime))[0];
+                return `<div class="p-5 rounded-2xl border border-slate-100 bg-white text-center ${!top ? 'opacity-30' : ''}">
+                    <span class="px-2 py-0.5 bg-slate-50 text-slate-500 rounded-full text-[8px] font-black uppercase mb-3 inline-block">${m}</span>
+                    <h4 class="text-[13px] font-black text-slate-800 truncate">${top ? top.Name : '-'}</h4>
+                    <p class="text-[9px] text-red-600 font-bold uppercase italic mt-1">${top ? top.CreatedDateTime : '-'}</p>
                 </div>`;
             }).join('');
-            
             lucide.createIcons();
         }
     </script>
