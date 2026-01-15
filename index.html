@@ -28,7 +28,7 @@
             background-color: var(--bg-main);
             color: #1e293b;
             height: 100vh;
-            overflow: hidden; /* ห้ามเลื่อนหน้าหลัก */
+            overflow: hidden; 
         }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -62,15 +62,11 @@
             transform: skewX(-25deg); 
             animation: shine 4s infinite; 
         }
-        
-        .stat-value {
-            letter-spacing: -0.05em;
-        }
     </style>
 </head>
 <body class="antialiased flex flex-col">
 
-    <!-- Header Section - Compact Height -->
+    <!-- Header Section -->
     <header class="bg-white/80 backdrop-blur-md border-b border-slate-200 z-[60] w-full flex-none">
         <div class="w-full px-6 py-3 flex items-center justify-between gap-4">
             <!-- Brand -->
@@ -86,9 +82,12 @@
 
             <!-- Global Actions & Navigation -->
             <div class="flex items-center gap-3">
-                <nav class="bg-slate-100 p-1 rounded-lg flex shadow-inner">
+                <nav class="bg-slate-100 p-1 rounded-lg flex shadow-inner gap-1">
                     <button id="tab-overview" onclick="switchTab('overview')" class="flex items-center gap-2 px-4 py-1.5 rounded-md text-[11px] font-bold transition-all duration-300 tab-active">
                         <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i> <span>ภาพรวม</span>
+                    </button>
+                    <button id="tab-growth" onclick="switchTab('growth')" class="flex items-center gap-2 px-4 py-1.5 rounded-md text-[11px] font-bold transition-all duration-300 text-slate-500 hover:text-slate-800">
+                        <i data-lucide="trending-up" class="w-3.5 h-3.5"></i> <span>แนวโน้มการเติบโต</span>
                     </button>
                     <button id="tab-earlybird" onclick="switchTab('earlybird')" class="flex items-center gap-2 px-4 py-1.5 rounded-md text-[11px] font-bold transition-all duration-300 text-slate-500 hover:text-slate-800">
                         <i data-lucide="trophy" class="w-3.5 h-3.5"></i> <span>Hall of Fame</span>
@@ -110,10 +109,10 @@
         </div>
     </header>
 
-    <!-- Main Content Area - Full height, no scroll -->
+    <!-- Main Content Area -->
     <main id="capture-area" class="flex-1 flex flex-col p-4 gap-4 overflow-hidden">
         
-        <!-- Smart Filters Section - Compact -->
+        <!-- Smart Filters Section -->
         <section class="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-3 flex items-center gap-3 flex-none">
             <div class="flex items-center gap-3 flex-1">
                 <div class="relative min-w-[100px]">
@@ -150,209 +149,122 @@
         </section>
 
         <!-- Tab Content: Overview -->
-        <div id="content-overview" class="flex-1 flex flex-col gap-4 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
-            
-            <!-- Strategic KPI Cards - Horizontal Grid -->
+        <div id="content-overview" class="flex-1 flex flex-col gap-4 overflow-hidden animate-in fade-in duration-500">
+            <!-- Strategic KPI Cards -->
             <div class="grid grid-cols-5 gap-3 flex-none">
-                <div class="bg-white p-3.5 rounded-2xl border border-slate-200/60 kpi-card relative overflow-hidden flex items-center gap-4">
-                    <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center flex-none">
-                        <i data-lucide="database" class="w-5 h-5 text-slate-400"></i>
-                    </div>
-                    <div>
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">บันทึกรวม</p>
-                        <h3 id="stat-total" class="text-xl font-black text-slate-900 stat-value leading-none mt-0.5">0</h3>
-                    </div>
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200/60 kpi-card flex items-center gap-4">
+                    <div class="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center flex-none"><i data-lucide="database" class="w-5 h-5 text-slate-400"></i></div>
+                    <div><p class="text-[9px] font-black text-slate-400 uppercase italic">บันทึกรวม</p><h3 id="stat-total" class="text-xl font-black text-slate-900 mt-0.5">0</h3></div>
                 </div>
-                <div class="bg-white p-3.5 rounded-2xl border border-slate-200/60 kpi-card relative overflow-hidden flex items-center gap-4">
-                    <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center flex-none">
-                        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i>
-                    </div>
-                    <div>
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">เรียนแล้ว (คน)</p>
-                        <h3 id="stat-active" class="text-xl font-black text-emerald-600 stat-value leading-none mt-0.5">0</h3>
-                    </div>
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200/60 kpi-card flex items-center gap-4">
+                    <div class="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center flex-none"><i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i></div>
+                    <div><p class="text-[9px] font-black text-slate-400 uppercase italic">เรียนแล้ว (คน)</p><h3 id="stat-active" class="text-xl font-black text-emerald-600 mt-0.5">0</h3></div>
                 </div>
-                <div class="bg-white p-3.5 rounded-2xl border border-slate-200/60 kpi-card relative overflow-hidden flex items-center gap-4">
-                    <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center flex-none">
-                        <i data-lucide="activity" class="w-5 h-5 text-blue-500"></i>
-                    </div>
-                    <div>
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">เฉลี่ย/คน</p>
-                        <h3 id="stat-avg" class="text-xl font-black text-blue-600 stat-value leading-none mt-0.5">0.0</h3>
-                    </div>
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200/60 kpi-card flex items-center gap-4">
+                    <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center flex-none"><i data-lucide="activity" class="w-5 h-5 text-blue-500"></i></div>
+                    <div><p class="text-[9px] font-black text-slate-400 uppercase italic">เฉลี่ย/คน</p><h3 id="stat-avg" class="text-xl font-black text-blue-600 mt-0.5">0.0</h3></div>
                 </div>
-                <div class="bg-white p-3.5 rounded-2xl border border-slate-200/60 kpi-card relative overflow-hidden flex items-center gap-4">
-                    <div class="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center flex-none">
-                        <i data-lucide="percent" class="w-5 h-5 text-purple-500"></i>
-                    </div>
-                    <div>
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">อัตราส่วน</p>
-                        <h3 id="stat-rate" class="text-xl font-black text-purple-600 stat-value leading-none mt-0.5">0%</h3>
-                    </div>
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200/60 kpi-card flex items-center gap-4">
+                    <div class="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center flex-none"><i data-lucide="percent" class="w-5 h-5 text-purple-500"></i></div>
+                    <div><p class="text-[9px] font-black text-slate-400 uppercase italic">อัตราส่วน</p><h3 id="stat-rate" class="text-xl font-black text-purple-600 mt-0.5">0%</h3></div>
                 </div>
-                <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 kpi-card relative overflow-hidden flex items-center gap-4">
-                    <div class="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center flex-none">
-                        <i data-lucide="alert-circle" class="w-5 h-5 text-red-500"></i>
-                    </div>
-                    <div>
-                        <p class="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">ยังไม่เรียน</p>
-                        <h3 id="stat-inactive" class="text-xl font-black text-white stat-value leading-none mt-0.5">0</h3>
-                    </div>
+                <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 kpi-card flex items-center gap-4">
+                    <div class="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center flex-none"><i data-lucide="alert-circle" class="w-5 h-5 text-red-500"></i></div>
+                    <div><p class="text-[9px] font-black text-slate-500 uppercase italic">ยังไม่เรียน</p><h3 id="stat-inactive" class="text-xl font-black text-white mt-0.5">0</h3></div>
                 </div>
             </div>
 
-            <!-- Spotlight Section - Two Rows flex -->
             <div class="flex-1 grid grid-cols-12 gap-4 overflow-hidden">
-                <!-- Row Left: Spotlight + Charts -->
-                <div class="col-span-8 flex flex-col gap-4 overflow-hidden">
-                    
-                    <!-- Spotlight Cards -->
-                    <div class="grid grid-cols-2 gap-4 h-[160px] flex-none">
-                        <!-- Grand Champion -->
+                <div class="col-span-8 flex flex-col gap-4">
+                    <!-- Champion Cards -->
+                    <div class="grid grid-cols-2 gap-4 h-[150px] flex-none">
                         <div class="bg-slate-900 text-white p-5 rounded-[2rem] shadow-lg relative overflow-hidden flex flex-col justify-between animate-shine border border-slate-800">
                             <i data-lucide="award" class="absolute top-2 right-2 w-20 h-20 opacity-[0.05]"></i>
-                            <div class="relative z-10">
-                                <span class="px-2 py-0.5 bg-yellow-400/90 text-slate-900 text-[8px] font-black uppercase italic rounded-full">Champion</span>
-                                <h2 id="winner-name" class="text-2xl font-black italic tracking-tighter uppercase truncate mt-1">-</h2>
-                                <p id="winner-dept" class="text-slate-500 font-bold text-[9px] uppercase tracking-widest truncate">-</p>
-                            </div>
-                            <div class="relative z-10 flex items-center justify-between border-t border-slate-800 pt-3">
-                                <div>
-                                    <p class="text-[8px] font-black text-slate-500 uppercase tracking-widest italic">Record</p>
-                                    <div class="flex items-baseline gap-1 leading-none">
-                                        <span id="winner-hits" class="text-2xl font-black text-white italic">0</span>
-                                        <span class="text-[9px] font-bold text-slate-500 uppercase">Units</span>
-                                    </div>
-                                </div>
-                                <div class="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center">
-                                    <i data-lucide="medal" class="w-4 h-4 text-yellow-500"></i>
-                                </div>
-                            </div>
+                            <div><span class="px-2 py-0.5 bg-yellow-400 text-slate-900 text-[8px] font-black uppercase italic rounded-full">Champion</span><h2 id="winner-name" class="text-2xl font-black italic uppercase truncate mt-1">-</h2><p id="winner-dept" class="text-slate-500 font-bold text-[9px] truncate">-</p></div>
+                            <div class="flex items-center justify-between border-t border-slate-800 pt-2"><div><p class="text-[8px] text-slate-500 italic uppercase">Record</p><h3 id="winner-hits" class="text-2xl font-black italic leading-none">0</h3></div><i data-lucide="medal" class="w-5 h-5 text-yellow-500"></i></div>
                         </div>
-
-                        <!-- Speed Star -->
-                        <div class="bg-white p-5 rounded-[2rem] border border-slate-200/60 shadow-sm flex flex-col justify-between relative overflow-hidden">
-                            <i data-lucide="zap" class="absolute top-2 right-2 w-20 h-20 opacity-[0.03] text-red-600"></i>
-                            <div class="relative z-10">
-                                <div class="flex items-center gap-2">
-                                    <span id="early-month-label" class="px-2 py-0.5 bg-red-600 text-white text-[8px] font-black uppercase italic rounded-full">-</span>
-                                    <span class="text-[8px] font-black text-slate-400 uppercase italic tracking-widest leading-none">Speed Star</span>
-                                </div>
-                                <h2 id="early-name" class="text-2xl font-black italic tracking-tighter uppercase truncate mt-1 text-slate-800">-</h2>
-                                <p id="early-time" class="text-red-600 font-black text-[9px] uppercase tracking-widest italic mt-1 truncate">First: -</p>
-                            </div>
-                            <div class="relative z-10 flex items-center justify-between border-t border-slate-100 pt-3">
-                                <p class="text-[9px] font-bold text-slate-400 italic leading-none">🏆 ผู้บันทึกคนแรกของช่วงเวลานี้</p>
-                                <div class="w-8 h-8 bg-slate-50 rounded-full flex items-center justify-center">
-                                    <i data-lucide="clock-3" class="w-4 h-4 text-red-500"></i>
-                                </div>
-                            </div>
+                        <div class="bg-white p-5 rounded-[2rem] border border-slate-200 shadow-sm flex flex-col justify-between overflow-hidden">
+                            <div><span id="early-month-label" class="px-2 py-0.5 bg-red-600 text-white text-[8px] font-black uppercase italic rounded-full">-</span><h2 id="early-name" class="text-2xl font-black italic uppercase truncate mt-1 text-slate-800">-</h2><p id="early-time" class="text-red-600 font-black text-[9px] italic mt-1 truncate">First: -</p></div>
+                            <div class="flex items-center justify-between border-t border-slate-100 pt-2"><p class="text-[9px] font-bold text-slate-400 italic">Monthly Speed Star</p><i data-lucide="clock-3" class="w-4 h-4 text-red-500"></i></div>
                         </div>
                     </div>
-
-                    <!-- Visual Charts Area -->
-                    <div class="flex-1 grid grid-cols-2 gap-4 overflow-hidden">
-                        <div class="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-200/60 flex flex-col overflow-hidden">
-                            <div class="flex items-center justify-between mb-2 px-1">
-                                <h3 class="text-[11px] font-black text-slate-800 uppercase italic tracking-tight">Performance Ranking</h3>
-                                <i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-slate-300"></i>
-                            </div>
-                            <div class="flex-1 min-h-0">
-                                <canvas id="learnerChart"></canvas>
-                            </div>
-                        </div>
-                        <div class="bg-white p-4 rounded-[2rem] shadow-sm border border-slate-200/60 flex flex-col overflow-hidden">
-                            <div class="flex items-center justify-between mb-2 px-1">
-                                <h3 class="text-[11px] font-black text-slate-800 uppercase italic tracking-tight">Growth Tendency</h3>
-                                <div class="flex items-center gap-2 text-[8px] font-bold text-slate-400">
-                                    <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Current</span>
-                                    <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-red-400"></span> Previous</span>
-                                </div>
-                            </div>
-                            <div class="flex-1 min-h-0">
-                                <canvas id="tendencyChart"></canvas>
-                            </div>
-                        </div>
+                    <!-- Ranking Chart -->
+                    <div class="flex-1 bg-white p-4 rounded-[2rem] shadow-sm border border-slate-200 flex flex-col min-h-0">
+                        <div class="flex items-center justify-between mb-2"><h3 class="text-[11px] font-black uppercase italic">Individual Performance Ranking</h3><i data-lucide="bar-chart-3" class="w-3.5 h-3.5 text-slate-300"></i></div>
+                        <div class="flex-1 min-h-0"><canvas id="learnerChart"></canvas></div>
                     </div>
                 </div>
-
-                <!-- Row Right: Pending List (Scrollable internal) -->
-                <div class="col-span-4 bg-white p-4 rounded-[2rem] border border-slate-200/60 shadow-sm flex flex-col overflow-hidden">
-                    <div class="flex items-center justify-between mb-3 px-2 flex-none">
-                        <h3 class="text-[11px] font-black text-slate-800 flex items-center gap-2 uppercase italic">
-                            <i data-lucide="user-x" class="text-orange-600 w-3.5 h-3.5"></i> 
-                            <span>Pending Learners</span>
-                        </h3>
-                        <span id="pending-count-label" class="px-2 py-0.5 bg-slate-100 text-slate-500 text-[9px] font-bold rounded-lg uppercase">0 Persons</span>
-                    </div>
-                    <div id="inactive-list-summary" class="flex-1 overflow-y-auto custom-scrollbar space-y-1.5 pr-1">
-                        <!-- JS Injected -->
-                    </div>
+                <!-- Pending List -->
+                <div class="col-span-4 bg-white p-4 rounded-[2rem] border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+                    <div class="flex items-center justify-between mb-3 px-2 flex-none"><h3 class="text-[11px] font-black uppercase italic flex items-center gap-2"><i data-lucide="user-x" class="text-orange-600 w-3.5 h-3.5"></i> Pending Learners</h3><span id="pending-count-label" class="px-2 py-0.5 bg-slate-100 text-slate-500 text-[9px] font-bold rounded-lg uppercase">0</span></div>
+                    <div id="inactive-list-summary" class="flex-1 overflow-y-auto custom-scrollbar space-y-1.5 pr-1"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Tab Content: Hall of Fame (Grid Scrollable) -->
+        <!-- Tab Content: Growth Tendency (Separate Tab) -->
+        <div id="content-growth" class="hidden flex-1 flex flex-col gap-4 overflow-hidden animate-in fade-in duration-500">
+            <div class="bg-white flex-1 p-8 rounded-[3rem] border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+                <div class="flex items-center justify-between mb-6 flex-none">
+                    <div>
+                        <h3 class="text-2xl font-black uppercase italic tracking-tighter text-slate-800">Growth Tendency Analysis</h3>
+                        <p class="text-xs text-slate-400 font-bold uppercase italic tracking-widest mt-1">3-Year Historical Data Comparison</p>
+                    </div>
+                    <div class="flex flex-col items-end gap-2">
+                        <div class="flex items-center gap-4 text-[10px] font-black italic">
+                            <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-blue-500"></span> <span id="label-year-0">2026</span> (Current)</span>
+                            <span class="flex items-center gap-2"><span class="w-3 h-1 bg-red-400 rounded-full"></span> <span id="label-year-1">2025</span> (Previous)</span>
+                            <span class="flex items-center gap-2"><span class="w-3 h-1 border-t-2 border-dotted border-slate-400"></span> <span id="label-year-2">2024</span></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-1 min-h-0 relative">
+                    <canvas id="tendencyChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Hall of Fame -->
         <div id="content-earlybird" class="hidden flex-1 overflow-hidden animate-in fade-in zoom-in-95 duration-500">
             <div class="bg-white h-full p-6 rounded-[2.5rem] border border-slate-200 shadow-sm flex flex-col overflow-hidden">
-                <div class="text-center mb-6 flex-none">
-                    <h3 class="text-2xl font-black italic tracking-tighter uppercase">Monthly Speed Stars</h3>
-                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest italic">Hall of Fame • Timeline</p>
-                </div>
-                <div id="earlybird-grid" class="flex-1 overflow-y-auto custom-scrollbar grid grid-cols-4 gap-3 p-2">
-                    <!-- JS Injected -->
-                </div>
+                <div class="text-center mb-6 flex-none"><h3 class="text-2xl font-black italic uppercase">Monthly Speed Stars History</h3><p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest italic">Hall of Fame Timeline</p></div>
+                <div id="earlybird-grid" class="flex-1 overflow-y-auto custom-scrollbar grid grid-cols-4 gap-3 p-2"></div>
             </div>
         </div>
     </main>
 
-    <!-- Import Modal -->
+    <!-- Modal remains the same -->
     <div id="import-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="toggleImportModal()"></div>
         <div class="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl p-8 border border-slate-200 relative z-10 animate-in zoom-in-95 duration-300">
-            <div class="flex items-center justify-between mb-8">
-                <h3 class="text-xl font-black text-slate-800 italic uppercase leading-none">Data Management</h3>
-                <button onclick="toggleImportModal()" class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 hover:text-red-600 transition-all">
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                </button>
-            </div>
-            
+            <div class="flex items-center justify-between mb-8"><h3 class="text-xl font-black text-slate-800 italic uppercase">Data Management</h3><button onclick="toggleImportModal()" class="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 hover:text-red-600 transition-all"><i data-lucide="x" class="w-4 h-4"></i></button></div>
             <div class="grid grid-cols-2 gap-4">
-                <div onclick="document.getElementById('file-members').click()" class="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-slate-200 cursor-pointer group hover:border-red-500 hover:bg-red-50/30 transition-all text-center">
-                    <i data-lucide="users" class="w-8 h-8 text-slate-300 group-hover:text-red-500 mx-auto mb-2"></i>
-                    <p class="font-black text-slate-800 text-[10px] italic uppercase">Members List</p>
-                    <input type="file" id="file-members" class="hidden" accept=".xlsx,.xls,.csv" onchange="handleFile(event, 'members')">
-                </div>
-                <div onclick="document.getElementById('file-records').click()" class="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-slate-200 cursor-pointer group hover:border-red-500 hover:bg-red-50/30 transition-all text-center">
-                    <i data-lucide="history" class="w-8 h-8 text-slate-300 group-hover:text-red-500 mx-auto mb-2"></i>
-                    <p class="font-black text-slate-800 text-[10px] italic uppercase">Learning Records</p>
-                    <input type="file" id="file-records" class="hidden" accept=".xlsx,.xls,.csv" onchange="handleFile(event, 'records')">
-                </div>
+                <div onclick="document.getElementById('file-members').click()" class="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-slate-200 cursor-pointer group hover:border-red-500 hover:bg-red-50 transition-all text-center"><i data-lucide="users" class="w-8 h-8 text-slate-300 group-hover:text-red-500 mx-auto mb-2"></i><p class="font-black text-slate-800 text-[10px] italic uppercase">Members List</p><input type="file" id="file-members" class="hidden" accept=".xlsx,.xls,.csv" onchange="handleFile(event, 'members')"></div>
+                <div onclick="document.getElementById('file-records').click()" class="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-slate-200 cursor-pointer group hover:border-red-500 hover:bg-red-50 transition-all text-center"><i data-lucide="history" class="w-8 h-8 text-slate-300 group-hover:text-red-500 mx-auto mb-2"></i><p class="font-black text-slate-800 text-[10px] italic uppercase">Learning Records</p><input type="file" id="file-records" class="hidden" accept=".xlsx,.xls,.csv" onchange="handleFile(event, 'records')"></div>
             </div>
         </div>
     </div>
 
     <script>
-        let members = [];
-        let records = [];
-        let tendencyChart, learnerChart;
-
+        let members = [], records = [], tendencyChart, learnerChart;
         const DEFAULT_DEPT = "SCG HEIM Factory/Product Development and Supply Chain Department";
         const MONTH_NAMES = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
         const MONTH_SHORT = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
 
-        window.onload = function() {
-            lucide.createIcons();
-            loadFromStorage();
-            runAnalysis();
-        };
+        window.onload = function() { lucide.createIcons(); loadFromStorage(); runAnalysis(); };
 
         function switchTab(tab) {
             document.getElementById('content-overview').classList.toggle('hidden', tab !== 'overview');
+            document.getElementById('content-growth').classList.toggle('hidden', tab !== 'growth');
             document.getElementById('content-earlybird').classList.toggle('hidden', tab !== 'earlybird');
-            document.getElementById('tab-overview').className = `flex items-center gap-2 px-4 py-1.5 rounded-md text-[11px] font-bold transition-all duration-300 ${tab === 'overview' ? 'tab-active' : 'text-slate-500 hover:text-slate-800'}`;
-            document.getElementById('tab-earlybird').className = `flex items-center gap-2 px-4 py-1.5 rounded-md text-[11px] font-bold transition-all duration-300 ${tab === 'earlybird' ? 'tab-active' : 'text-slate-500 hover:text-slate-800'}`;
-            if(tab === 'overview') runAnalysis(); else renderEarlyBirds();
+            
+            ['overview', 'growth', 'earlybird'].forEach(t => {
+                const btn = document.getElementById('tab-' + t);
+                btn.className = `flex items-center gap-2 px-4 py-1.5 rounded-md text-[11px] font-bold transition-all duration-300 ${tab === t ? 'tab-active' : 'text-slate-500 hover:text-slate-800'}`;
+            });
+            
+            if(tab === 'overview' || tab === 'growth') runAnalysis(); 
+            if(tab === 'earlybird') renderEarlyBirds();
         }
 
         function toggleImportModal() { document.getElementById('import-modal').classList.toggle('hidden'); }
@@ -361,22 +273,16 @@
             const captureArea = document.getElementById('capture-area');
             const captureBtn = document.querySelector('[onclick="captureScreen()"]');
             captureBtn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i>';
-            lucide.createIcons();
             try {
                 const canvas = await html2canvas(captureArea, { scale: 2, backgroundColor: '#f8fafc', useCORS: true });
                 const link = document.createElement('a');
                 link.download = `HEIM-Report-${new Date().toISOString().split('T')[0]}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            } finally {
-                captureBtn.innerHTML = '<i data-lucide="camera" class="w-3.5 h-3.5"></i>';
-                lucide.createIcons();
-            }
+                link.href = canvas.toDataURL('image/png'); link.click();
+            } finally { captureBtn.innerHTML = '<i data-lucide="camera" class="w-3.5 h-3.5"></i>'; lucide.createIcons(); }
         }
 
         function handleFile(event, type) {
-            const file = event.target.files[0];
-            if (!file) return;
+            const file = event.target.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = function(e) {
                 const workbook = XLSX.read(new Uint8Array(e.target.result), {type: 'array'});
@@ -394,10 +300,8 @@
         }
 
         function loadFromStorage() {
-            const m = localStorage.getItem('scg_heim_members_v2');
-            const r = localStorage.getItem('scg_heim_records_v2');
-            if(m) members = JSON.parse(m);
-            if(r) records = JSON.parse(r);
+            const m = localStorage.getItem('scg_heim_members_v2'), r = localStorage.getItem('scg_heim_records_v2');
+            if(m) members = JSON.parse(m); if(r) records = JSON.parse(r);
             populateDepts();
         }
 
@@ -426,14 +330,13 @@
             const targetPool = members.filter(m => dept === 'ทั้งหมด' || m.dept === dept);
             const activeNames = new Set(filtered.map(r => r.Name));
             const activeCount = targetPool.filter(m => activeNames.has(m.name)).length;
-            const inactiveCount = targetPool.length - activeCount;
 
             document.getElementById('stat-total').innerText = filtered.length.toLocaleString();
             document.getElementById('stat-active').innerText = activeCount.toLocaleString();
             document.getElementById('stat-avg').innerText = activeCount > 0 ? (filtered.length / activeCount).toFixed(1) : "0.0";
             document.getElementById('stat-rate').innerText = targetPool.length > 0 ? Math.round((activeCount / targetPool.length) * 100) + "%" : "0%";
-            document.getElementById('stat-inactive').innerText = inactiveCount.toLocaleString();
-            document.getElementById('pending-count-label').innerText = inactiveCount.toLocaleString() + " Persons";
+            document.getElementById('stat-inactive').innerText = (targetPool.length - activeCount).toLocaleString();
+            document.getElementById('pending-count-label').innerText = (targetPool.length - activeCount).toLocaleString();
 
             const userCounts = {}; filtered.forEach(r => userCounts[r.Name] = (userCounts[r.Name] || 0) + 1);
             const sortedUsers = Object.entries(userCounts).map(([name, count]) => ({ name, count, dept: (members.find(m => m.name === name) || {}).dept || "ไม่ระบุ" })).sort((a,b) => b.count - a.count);
@@ -448,17 +351,11 @@
                 document.getElementById('early-month-label').innerText = month === 'ALL' ? 'Annual' : MONTH_NAMES[new Date(first.CreatedDateTime).getMonth()];
                 document.getElementById('early-name').innerText = first.Name;
                 document.getElementById('early-time').innerText = `Date: ${first.CreatedDateTime}`;
-            } else {
-                document.getElementById('early-name').innerText = "-"; document.getElementById('early-time').innerText = "No Records";
-            }
+            } else { document.getElementById('early-name').innerText = "-"; document.getElementById('early-time').innerText = "No Records"; }
 
-            const pendingList = targetPool.filter(m => !activeNames.has(m.name));
-            document.getElementById('inactive-list-summary').innerHTML = pendingList.map(m => `
-                <div class="flex items-center justify-between p-2.5 bg-slate-50/50 rounded-xl border border-slate-100">
-                    <div class="truncate pr-2">
-                        <p class="text-[10px] font-bold text-slate-700 truncate leading-none">${m.name}</p>
-                        <p class="text-[8px] text-slate-400 font-bold uppercase italic mt-1 truncate">${m.dept}</p>
-                    </div>
+            document.getElementById('inactive-list-summary').innerHTML = targetPool.filter(m => !activeNames.has(m.name)).map(m => `
+                <div class="flex items-center justify-between p-2 bg-slate-50/50 rounded-xl border border-slate-100">
+                    <div class="truncate"><p class="text-[10px] font-bold text-slate-700 truncate leading-none">${m.name}</p><p class="text-[8px] text-slate-400 font-bold uppercase mt-1 truncate">${m.dept}</p></div>
                     <span class="text-[7px] border border-slate-200 text-slate-400 px-1.5 py-0.5 rounded-full uppercase font-black">Pending</span>
                 </div>`).join('') || '<div class="text-center py-10 opacity-20 text-[10px] font-bold">ALL COMPLETED</div>';
 
@@ -476,15 +373,26 @@
             });
 
             const ctxT = document.getElementById('tendencyChart');
+            const year0 = targetYear, year1 = String(targetYear - 1), year2 = String(targetYear - 2);
+            document.getElementById('label-year-0').innerText = year0;
+            document.getElementById('label-year-1').innerText = year1;
+            document.getElementById('label-year-2').innerText = year2;
+
             const getYearly = (y) => MONTH_SHORT.map((_, i) => records.filter(r => String(r.CreatedDateTime).startsWith(y) && String(r.CreatedDateTime).includes(`-${String(i+1).padStart(2,'0')}-`)).length);
+            
             if(tendencyChart) tendencyChart.destroy();
             tendencyChart = new Chart(ctxT, {
                 type: 'line',
                 data: { labels: MONTH_SHORT, datasets: [
-                    { label: targetYear, data: getYearly(targetYear), borderColor: '#3b82f6', tension: 0.4, borderWidth: 3, pointRadius: 2 },
-                    { label: targetYear-1, data: getYearly(String(targetYear-1)), borderColor: '#ef4444', borderDash: [4,4], tension: 0.4, borderWidth: 1.5, pointRadius: 0 }
+                    { label: year0, data: getYearly(year0), borderColor: '#3b82f6', tension: 0.4, borderWidth: 4, pointRadius: 4, fill: true, backgroundColor: 'rgba(59, 130, 246, 0.05)' },
+                    { label: year1, data: getYearly(year1), borderColor: '#ef4444', borderDash: [5,5], tension: 0.4, borderWidth: 2, pointRadius: 2 },
+                    { label: year2, data: getYearly(year2), borderColor: '#94a3b8', borderDash: [2,3], tension: 0.4, borderWidth: 2, pointRadius: 0 }
                 ]},
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: true, ticks: { font: { size: 8 } } }, x: { grid: { display: false }, ticks: { font: { size: 9 } } } } }
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+                    scales: { y: { ticks: { font: { size: 10, weight: 'bold' }, color: '#94a3b8' }, grid: { color: '#f1f5f9' } }, x: { grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' }, color: '#94a3b8' } } }
+                }
             });
         }
 
@@ -492,11 +400,7 @@
             const year = document.getElementById('filter-year').value;
             document.getElementById('earlybird-grid').innerHTML = MONTH_NAMES.map((m, i) => {
                 const top = records.filter(r => String(r.CreatedDateTime).startsWith(year) && String(r.CreatedDateTime).includes(`-${String(i+1).padStart(2,'0')}-`)).sort((a,b) => new Date(a.CreatedDateTime) - new Date(b.CreatedDateTime))[0];
-                return `<div class="p-5 rounded-2xl border border-slate-100 bg-white text-center ${!top ? 'opacity-30' : ''}">
-                    <span class="px-2 py-0.5 bg-slate-50 text-slate-500 rounded-full text-[8px] font-black uppercase mb-3 inline-block">${m}</span>
-                    <h4 class="text-[13px] font-black text-slate-800 truncate">${top ? top.Name : '-'}</h4>
-                    <p class="text-[9px] text-red-600 font-bold uppercase italic mt-1">${top ? top.CreatedDateTime : '-'}</p>
-                </div>`;
+                return `<div class="p-5 rounded-2xl border border-slate-100 bg-white text-center ${!top ? 'opacity-30' : 'shadow-sm'}"><span class="px-2 py-0.5 bg-slate-50 text-slate-500 rounded-full text-[8px] font-black uppercase mb-3 inline-block">${m}</span><h4 class="text-[13px] font-black text-slate-800 truncate">${top ? top.Name : '-'}</h4><p class="text-[9px] text-red-600 font-bold uppercase italic mt-1">${top ? top.CreatedDateTime : '-'}</p></div>`;
             }).join('');
             lucide.createIcons();
         }
