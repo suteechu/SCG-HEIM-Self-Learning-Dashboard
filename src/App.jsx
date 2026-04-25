@@ -14,7 +14,7 @@ import {
 import { Bar, Line } from 'react-chartjs-2';
 
 // --- Components ---
-import DataModal from "./modal.jsx";
+
 import Sidebar from "./components/Sidebar.jsx";       
 import DetailTable from "./components/DetailTable.jsx"; 
 
