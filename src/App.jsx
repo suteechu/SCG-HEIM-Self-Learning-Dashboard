@@ -5,7 +5,7 @@ import {
   Building2, Info, Lightbulb, TrendingUp, Copy, CheckCircle,
   Hourglass, Activity, FileSpreadsheet, Lock, Phone,
   PieChart, UserX, Trophy, Flame, AlertCircle, CheckCircle2, UploadCloud, BarChart2, Users,
-  Sun, Moon
+  Sun, Moon, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { 
   Chart as ChartJS, CategoryScale, LinearScale, PointElement, 
@@ -13,273 +13,23 @@ import {
 } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
 
+// ✅ นำเข้า Hook และ Components ที่เราแยกไฟล์ออกไป
+import { useGoogleSheets } from './hooks/useGoogleSheets';
+import { useDashboardMetrics } from './hooks/useDashboardMetrics';
+import { Sidebar, DetailTable, Leaderboard, KpiCards } from './components/DashboardComponents';
+
 // --- Components ---
 
-import Sidebar from "./components/Sidebar.jsx";       
-import DetailTable from "./components/DetailTable.jsx"; 
+const DataModal = () => null;
 
 // Register ChartJS
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler);
-
-// ==========================================
-// ✅ รวบระบบ useGoogleSheets มาไว้ที่นี่เพื่อให้ไฟล์เดียวจบ 
-// ==========================================
-const SHEET_ID_MEMBERS = "1MaQBFxzMAU3IM4S2fV4lfAEPzQK7NKP5iEkaH_3riqE";
-const SHEET_ID_RECORDS = "1MaQBFxzMAU3IM4S2fV4lfAEPzQK7NKP5iEkaH_3riqE"; 
-
-const normalizeKey = (key) => key.toLowerCase().trim().replace(/[\s\-_()]/g, '');
-
-const normalizeDeptName = (deptName) => {
-    if (!deptName) return "-";
-    let d = deptName.replace(/[/\\]+/g, " > ");
-    d = d.replace(/\s*>\s*/g, " > ");
-    return d.trim();
-};
-
-const useScript = (src) => {
-  const [status, setStatus] = useState(src ? "loading" : "idle");
-  useEffect(() => {
-    if (!src) { setStatus("idle"); return; }
-    let script = document.querySelector(`script[src="${src}"]`);
-    if (!script) {
-      script = document.createElement("script");
-      script.src = src;
-      script.async = true;
-      script.setAttribute("data-status", "loading");
-      document.body.appendChild(script);
-      const setAttributeFromEvent = (event) => {
-        script.setAttribute("data-status", event.type === "load" ? "ready" : "error");
-        setStatus(event.type === "load" ? "ready" : "error");
-      };
-      script.addEventListener("load", setAttributeFromEvent);
-      script.addEventListener("error", setAttributeFromEvent);
-    } else {
-      setStatus(script.getAttribute("data-status") || "loading");
-    }
-  }, [src]);
-  return status;
-};
-
-function useGoogleSheets() {
-  const xlsxStatus = useScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
-  useScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-  useScript('https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js');
-
-  const [members, setMembers] = useState([]);
-  const [records, setRecords] = useState([]);
-  const [isSyncing, setIsSyncing] = useState(true);
-  const [syncStatusText, setSyncStatusText] = useState("Connecting to Cloud...");
-  const isInitialized = useRef(false);
-
-  const processData = useCallback((arrayBuffer, type, contextMembers = []) => {
-    if (!window.XLSX) return null;
-    const wb = window.XLSX.read(new Uint8Array(arrayBuffer), { type: 'array', codepage: 65001 });
-    const raw = window.XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-
-    const findKey = (row, ...candidates) => {
-        const keys = Object.keys(row);
-        for (const candidate of candidates) {
-            const normCandidate = normalizeKey(candidate);
-            const exact = keys.find(k => normalizeKey(k) === normCandidate);
-            if (exact) return exact;
-            const found = keys.find(k => normalizeKey(k).includes(normCandidate));
-            if (found) return found;
-        }
-        return null;
-    };
-
-    if (type === 'members') {
-      const newMembers = raw.map(row => {
-        const emailKey = findKey(row, 'emailaddressbusiness', 'emailaddress', 'email');
-        const rawEmail = emailKey ? String(row[emailKey] || "").trim() : "";
-        const email = rawEmail.toLowerCase();
-
-        const empIdKey = findKey(row, 'scgemployeeid', 'employeeid');
-        const prefixKey = findKey(row, 'nameprefixthai', 'nameprefix', 'prefix');
-        const fNameKey = findKey(row, 'firstnamethai', 'firstname');
-        const lNameKey = findKey(row, 'lastnamethai', 'lastname');
-        const fullNameKey = findKey(row, 'name', 'fullname', 'ชื่อ-สกุล');
-        const posKey = findKey(row, 'positionnamethai', 'positionname', 'position');
-        const sectionKey = findKey(row, 'sectionthai', 'section');
-        const deptKey = findKey(row, 'departmentthai', 'department');
-        const divKey = findKey(row, 'divisionthai', 'division');
-        const compKey = findKey(row, 'companythai', 'company');
-
-        let name = "-";
-        if (fNameKey && row[fNameKey]) {
-            name = String(row[fNameKey]).trim() + (lNameKey && row[lNameKey] ? " " + String(row[lNameKey]).trim() : "");
-        } else if (fullNameKey && row[fullNameKey]) {
-            name = String(row[fullNameKey]).trim();
-        }
-
-        let dept = "-";
-        const dStr = deptKey ? String(row[deptKey] || "").trim() : "";
-        const sStr = sectionKey ? String(row[sectionKey] || "").trim() : "";
-        const divStr = divKey ? String(row[divKey] || "").trim() : "";
-
-        // ✅ ปรับให้ใช้ชื่อ Department เป็นหลัก
-        if (dStr) dept = dStr;
-        else if (sStr) dept = sStr;
-        else if (divStr) dept = divStr;
-
-        return { 
-            name, 
-            dept: normalizeDeptName(dept), 
-            email,
-            rawEmail,
-            empId: empIdKey ? String(row[empIdKey] || "").trim() : "",
-            prefix: prefixKey ? String(row[prefixKey] || "").trim() : "",
-            firstName: fNameKey ? String(row[fNameKey] || "").trim() : "",
-            lastName: lNameKey ? String(row[lNameKey] || "").trim() : "",
-            position: posKey ? String(row[posKey] || "").trim() : "",
-            sectionRaw: sectionKey ? String(row[sectionKey] || "").trim() : "",
-            departmentRaw: deptKey ? String(row[deptKey] || "").trim() : "",
-            divisionRaw: divKey ? String(row[divKey] || "").trim() : "",
-            companyRaw: compKey ? String(row[compKey] || "").trim() : ""
-        };
-      }).filter(m => m.name !== "-" && m.email !== "");
-      
-      setMembers(newMembers);
-      // ✅ เปลี่ยน Cache Version เป็น V20 เพื่อล้างความจำเดิมทิ้ง
-      localStorage.setItem('scg_heim_members_v20', JSON.stringify(newMembers));
-      return newMembers; 
-
-    } else {
-      const memberMapByEmail = new Map();
-      const memberMapByName = new Map();
-      
-      contextMembers.forEach(m => {
-          if (m.email && m.email !== "-") memberMapByEmail.set(m.email, m);
-          if (m.name && m.name !== "-") memberMapByName.set(m.name.toLowerCase(), m);
-      });
-
-      const newRecords = raw.map(row => {
-        const emailKey = findKey(row, 'emailaddress', 'email', 'e-mail', 'username');
-        const rawEmail = emailKey ? String(row[emailKey] || "").trim().toLowerCase() : "";
-        
-        const nameKey = findKey(row, 'name', 'ชื่อ');
-        const rawName = String(row[nameKey] || "").trim();
-
-        let finalName = rawName;
-        let finalDept = "-";
-
-        const matchedMember = (rawEmail && memberMapByEmail.get(rawEmail)) || (rawName && memberMapByName.get(rawName.toLowerCase()));
-
-        if (matchedMember) {
-            finalName = matchedMember.name; 
-            finalDept = matchedMember.dept;
-        } else {
-            const recDeptKey = findKey(row, 'department', 'dept', 'แผนก');
-            finalDept = normalizeDeptName(String(row[recDeptKey] || "").trim());
-        }
-
-        const dateKey = findKey(row, 'createddatetime', 'time', 'date', 'วันที่');
-        const topicKey = findKey(row, 'topic', 'subject', 'หัวข้อ', 'เรื่อง');
-
-        let dateStr = row[dateKey];
-        let formattedDate = "";
-        if (typeof dateStr === 'number') {
-             formattedDate = new Date((dateStr - (25567 + 2)) * 86400 * 1000).toISOString().split('T')[0];
-        } else if (dateStr) {
-             formattedDate = String(dateStr).split(' ')[0];
-        }
-
-        return {
-            Name: finalName || "-",
-            Email: rawEmail || "-",
-            Department: finalDept,
-            CreatedDateTime: formattedDate,
-            Topic: String(row[topicKey] || "-")
-        };
-      }).filter(r => r.Name !== "-");
-
-      setRecords(newRecords);
-      localStorage.setItem('scg_heim_records_v20', JSON.stringify(newRecords));
-    }
-  }, []);
-
-  const handleCloudSync = useCallback(async (isAuto = false) => {
-    setIsSyncing(true);
-    setSyncStatusText("Syncing data...");
-
-    const safetyTimeout = setTimeout(() => {
-        console.warn("Sync Timeout Check...");
-    }, 15000);
-
-    const loadLocalData = () => {
-        const m = localStorage.getItem('scg_heim_members_v20');
-        const r = localStorage.getItem('scg_heim_records_v20');
-        if (m && r) {
-            setMembers(JSON.parse(m));
-            setRecords(JSON.parse(r));
-        }
-    };
-
-    const fetchSheet = async (id, name, gid = "") => {
-      const exportUrl = `https://docs.google.com/spreadsheets/d/${id}/export?format=csv${gid ? `&gid=${gid}` : ''}`;
-      const urls = [
-          exportUrl, 
-          `https://api.allorigins.win/raw?url=${encodeURIComponent(exportUrl)}`,
-          `https://corsproxy.io/?${encodeURIComponent(exportUrl)}`
-      ];
-
-      for (const url of urls) {
-          try {
-              const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 15000);
-              const res = await fetch(url, { signal: controller.signal });
-              clearTimeout(timeoutId);
-              if (res.ok) {
-                  const blob = await res.arrayBuffer();
-                  if (blob.byteLength > 100) return blob; 
-              }
-          } catch (e) {
-              console.warn(`Attempt failed for ${name}`);
-          }
-      }
-      throw new Error(`Failed to fetch ${name}`);
-    };
-
-    try {
-      const [memBlob, recBlob] = await Promise.all([
-          fetchSheet(SHEET_ID_MEMBERS, "Members", "449028493"), 
-          fetchSheet(SHEET_ID_RECORDS, "Records") 
-      ]);
-      const loadedMembers = processData(memBlob, 'members');
-      processData(recBlob, 'records', loadedMembers);
-      if (!isAuto && window.confetti) window.confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-    } catch (err) {
-      console.error("❌ Sync Error:", err);
-      loadLocalData();
-    } finally {
-      clearTimeout(safetyTimeout);
-      setIsSyncing(false); 
-    }
-  }, [processData]);
-
-  useEffect(() => {
-    if (isInitialized.current) return;
-    if (xlsxStatus === 'ready') {
-        isInitialized.current = true;
-        handleCloudSync(true);
-    } else {
-        const fallbackTimer = setTimeout(() => {
-            if (!isInitialized.current) {
-                isInitialized.current = true;
-                handleCloudSync(true);
-            }
-        }, 3000);
-        return () => clearTimeout(fallbackTimer);
-    }
-  }, [xlsxStatus, handleCloudSync]);
-
-  return { members, records, isSyncing, syncStatusText, handleCloudSync };
-}
 
 
 // --- Constants ---
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/1SeL-3oosOKaeqN1MGxJdKduE6pKmEe356BDKakf_uR1f-G9feVALKHG1/exec"; 
+const SHEET_ID_RECORDS = "1MaQBFxzMAU3IM4S2fV4lfAEPzQK7NKP5iEkaH_3riqE";
 
 const getDaysToNextSync = () => {
   const today = new Date();
@@ -300,126 +50,6 @@ const formatShortName = (fullName) => {
   return fullName;
 };
 
-// ==========================================
-// Components
-// ==========================================
-const Leaderboard = ({ champion, earlyBird, chartData, chartMode, setChartMode, themeVars }) => {
-  return (
-    <div className="col-span-8 p-4 bg-[var(--bg-panel)] border border-[var(--border-main)] rounded-lg flex flex-col h-full shadow-sm overflow-hidden transition-colors duration-300">
-       <div className="flex justify-between items-center mb-5 flex-none">
-          <h3 className="text-[11px] font-bold uppercase tracking-widest text-[var(--text-main)] flex items-center gap-2">
-             <BarChart2 className="w-4 h-4 text-[var(--c-emerald)]" /> TOP PERFORMERS
-          </h3>
-          <div className="flex bg-[var(--bg-base)] rounded border border-[var(--border-main)] p-0.5">
-             <button onClick={() => setChartMode('user')} className={`px-3 py-1 text-[9px] font-bold uppercase rounded transition-all ${chartMode === 'user' ? 'bg-[var(--bg-panel)] text-[var(--c-emerald)] shadow-sm' : 'text-[var(--text-faint)] hover:text-[var(--text-muted)]'}`}>Users</button>
-             <button onClick={() => setChartMode('dept')} className={`px-3 py-1 text-[9px] font-bold uppercase rounded transition-all ${chartMode === 'dept' ? 'bg-[var(--bg-panel)] text-[var(--c-emerald)] shadow-sm' : 'text-[var(--text-faint)] hover:text-[var(--text-muted)]'}`}>Departments</button>
-          </div>
-       </div>
-
-       <div className="grid grid-cols-2 gap-4 mb-5 flex-none">
-          <div className="bg-[var(--bg-base)] border border-[var(--border-main)] rounded-lg p-3 flex items-center gap-3 hover:border-[var(--c-amber-bd)] transition-all">
-             <div className="p-2.5 bg-[var(--c-amber-bg)] rounded-full text-[var(--c-amber)]"><Trophy className="w-5 h-5" /></div>
-             <div className="overflow-hidden w-full">
-                <p className="text-[9px] text-[var(--text-muted)] font-bold uppercase tracking-widest">Top Learner</p>
-                <p className="text-sm font-bold text-[var(--text-main)] truncate">
-                  {champion ? `${champion.prefix ? champion.prefix + ' ' : ''}${champion.name}` : '-'}
-                </p>
-                <p className="text-[10px] text-[var(--c-amber)] font-mono mt-0.5">{champion ? `${champion.count} Topics Completed` : ''}</p>
-             </div>
-          </div>
-          <div className="bg-[var(--bg-base)] border border-[var(--border-main)] rounded-lg p-3 flex items-center gap-3 hover:border-[var(--c-blue-bd)] transition-all">
-             <div className="p-2.5 bg-[var(--c-blue-bg)] rounded-full text-[var(--c-blue)]"><Clock className="w-5 h-5" /></div>
-             <div className="overflow-hidden w-full">
-                <p className="text-[9px] text-[var(--text-muted)] font-bold uppercase tracking-widest">Early Bird</p>
-                <p className="text-sm font-bold text-[var(--text-main)] truncate">
-                  {earlyBird ? `${earlyBird.prefix ? earlyBird.prefix + ' ' : ''}${earlyBird.Name}` : '-'}
-                </p>
-                <p className="text-[10px] text-[var(--c-blue)] font-mono mt-0.5 truncate">{earlyBird ? earlyBird.CreatedDateTime : ''}</p>
-             </div>
-          </div>
-       </div>
-
-       <div className="flex-1 min-h-0 relative">
-          <Bar 
-             data={chartData}
-             options={{
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { 
-                  legend: { display: false }, 
-                  tooltip: { backgroundColor: themeVars.tooltipBg, borderColor: themeVars.tooltipBorder, borderWidth: 1, titleColor: themeVars.tooltipTitle, bodyColor: themeVars.tooltipBody, titleFont: { family: 'Prompt', size: 11 }, bodyFont: { family: 'JetBrains Mono', size: 11 }, padding: 10, displayColors: false } 
-                },
-                scales: {
-                   x: { beginAtZero: true, grid: { color: themeVars.grid }, border: { dash: [4,4] }, ticks: { color: themeVars.textFaint, font: { family: 'JetBrains Mono', size: 10 } } },
-                   y: { grid: { display: false }, ticks: { color: themeVars.textMuted, font: { family: 'Prompt', size: 10 } } }
-                }
-             }}
-          />
-       </div>
-    </div>
-  );
-};
-
-const StatCard = ({ title, value, subValue, icon: Icon, valueColor, iconColor, delay }) => (
-  <div 
-    className="bg-[var(--bg-panel)] border border-[var(--border-main)] p-2.5 rounded-lg hover:border-[var(--border-hover)] transition-all duration-300 flex items-center justify-between cursor-default animate-[fadeInUp_0.5s_ease-out] min-w-0"
-    style={{ animationDelay: `${delay}ms` }}
-  >
-    <div className="flex flex-col gap-0.5 min-w-0 pr-1 overflow-hidden">
-      <p className="text-[10px] font-medium text-[var(--text-muted)] uppercase tracking-wider truncate">{title}</p>
-      <div className="flex flex-col">
-        <div className="flex items-baseline gap-1 mt-0.5">
-            <h3 className={`text-lg font-black tracking-tight ${valueColor} truncate leading-tight font-mono`}>
-              {typeof value === 'object' ? '-' : (value || "-")}
-            </h3>
-            {title === "Avg. Sub." && <span className="text-[9px] font-medium text-[var(--text-faint)]">/User</span>}
-        </div>
-        {subValue && (
-          <span className={`flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded w-fit mt-1 border truncate max-w-full ${subValue.style}`}>
-            {subValue.text || subValue}
-          </span>
-        )}
-      </div>
-    </div>
-    <div className={`p-2 rounded bg-[var(--bg-base)] border border-[var(--border-main)] flex-none`}>
-      <Icon className={`w-4 h-4 ${iconColor}`} />
-    </div>
-  </div>
-);
-
-const KpiCards = ({ stats }) => {
-  const TARGET_AVG = 1.0; 
-  const currentAvg = parseFloat(stats.avg || 0);
-  const isAvgPassed = currentAvg >= TARGET_AVG;
-
-  return (
-    <div className="grid grid-cols-3 gap-3 flex-none">
-      <StatCard 
-        title="Completed" value={stats.completed} 
-        subValue={{ text: "Users Checked", style: "bg-[var(--bg-hover)] text-[var(--text-muted)] border-[var(--border-hover)]" }}
-        icon={CheckCircle2} valueColor="text-[var(--text-main)]" iconColor="text-[var(--c-emerald)]" delay={0}
-      />
-      <StatCard 
-        title="Avg. Sub." value={stats.avg} 
-        subValue={
-          isAvgPassed 
-            ? { text: "Pass Criteria ✅", style: "bg-[var(--c-emerald-bg)] text-[var(--c-emerald)] border-[var(--c-emerald-bd)]" }
-            : { text: `Target person: ${TARGET_AVG}`, style: "bg-[var(--c-amber-bg)] text-[var(--c-amber)] border-[var(--c-amber-bd)]" }
-        }
-        icon={isAvgPassed ? Zap : AlertCircle} 
-        valueColor={isAvgPassed ? "text-[var(--c-emerald)]" : "text-[var(--c-amber)]"} 
-        iconColor={isAvgPassed ? "text-[var(--c-emerald)]" : "text-[var(--c-amber)]"} delay={100}
-      />
-      <StatCard 
-        title="Comp. Rate" value={`${stats.rate}%`} 
-        subValue={{ text: "Overall Progress", style: "bg-[var(--c-blue-bg)] text-[var(--c-blue)] border-[var(--c-blue-bd)]" }}
-        icon={PieChart} valueColor="text-[var(--c-blue)]" iconColor="text-[var(--c-blue)]" delay={200}
-      />
-    </div>
-  );
-};
-
 export default function App() {
   const { members, records, isSyncing, syncStatusText, handleCloudSync } = useGoogleSheets();
   const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
@@ -428,9 +58,28 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isUploadingToCloud, setIsUploadingToCloud] = useState(false);
+  const [loadingPercent, setLoadingPercent] = useState(0);
   
   const [isDarkMode, setIsDarkMode] = useState(false);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (isSyncing || isUploadingToCloud) {
+      setLoadingPercent(0);
+      const interval = setInterval(() => {
+        setLoadingPercent((prev) => {
+          if (prev >= 99) {
+            clearInterval(interval);
+            return 99;
+          }
+          return prev + Math.floor(Math.random() * 10) + 2; 
+        });
+      }, 150);
+      return () => clearInterval(interval);
+    } else {
+      setLoadingPercent(100);
+    }
+  }, [isSyncing, isUploadingToCloud]);
   
   const [filters, setFilters] = useState({ 
     year: '2026', 
@@ -489,139 +138,11 @@ export default function App() {
     reader.readAsText(file, 'UTF-8');
   };
 
-  const { filteredRecords, targetPool, deptStats, champion, earlyBird, pendingList, todayCount, latestActivity, allUserStats } = useMemo(() => {
-    const filtered = records.filter(r => {
-      if (!r.CreatedDateTime) return false;
-      const dt = String(r.CreatedDateTime);
-      const matchYear = dt.startsWith(filters.year);
-      const matchMonth = filters.month === 'ALL' || dt.includes(`-${filters.month}-`);
-      const matchDept = filters.dept === 'All' || r.Department === filters.dept;
-      const searchLower = filters.search.toLowerCase();
-      const matchSearch = filters.search === '' || r.Name.toLowerCase().includes(searchLower) || (r.Topic && r.Topic.toLowerCase().includes(searchLower));
-      return matchYear && matchMonth && matchDept && matchSearch;
-    });
-
-    let effMembers = members;
-    if (members.length === 0 && records.length > 0) {
-      const uniqueMap = new Map();
-      records.forEach(r => { if (!uniqueMap.has(r.Name)) uniqueMap.set(r.Name, { name: r.Name, dept: r.Department, email: r.Email || "-" }); });
-      effMembers = Array.from(uniqueMap.values());
-    }
-
-    const pool = effMembers.filter(m => filters.dept === 'All' || m.dept === filters.dept);
-    const activeNames = new Set(filtered.map(r => r.Name));
-    const pending = pool.filter(m => !activeNames.has(m.name));
-
-    const stats = {};
-    const allDepts = [...new Set(effMembers.map(m => m.dept))];
-    allDepts.forEach(d => stats[d] = { total: 0, active: 0, totalRecords: 0 });
-    effMembers.forEach(m => { if (stats[m.dept]) stats[m.dept].total++; });
-    
-    const activeInContext = new Set();
-    records.filter(r => {
-        const dt = String(r.CreatedDateTime);
-        return dt.startsWith(filters.year) && (filters.month === 'ALL' || dt.includes(`-${filters.month}-`));
-    }).forEach(r => {
-        const user = effMembers.find(m => m.name === r.Name);
-        if (user) {
-            if (stats[user.dept]) {
-                stats[user.dept].totalRecords++; 
-                if (!activeInContext.has(user.name)) {
-                    activeInContext.add(user.name);
-                    stats[user.dept].active++;
-                }
-            }
-        }
-    });
-
-    const sortedDeptStats = Object.entries(stats).map(([name, s]) => ({ 
-        name, 
-        ...s, 
-        rate: s.total > 0 ? (s.active / s.total * 100) : 0,
-        avgSub: s.total > 0 ? (s.totalRecords / s.total).toFixed(1) : "0.0" 
-    })).sort((a, b) => b.rate - a.rate);
-
-    const counts = {}; filtered.forEach(r => counts[r.Name] = (counts[r.Name] || 0) + 1);
-    
-    const sortedUsers = Object.entries(counts).map(([name, count]) => {
-        const m = effMembers.find(x => x.name === name);
-        return { name, prefix: m?.prefix || "", count, dept: m?.dept || 'N/A' };
-    }).sort((a, b) => b.count - a.count);
-    
-    const rankedUsers = pool.map(m => ({
-        name: m.name,
-        prefix: m.prefix || "",
-        dept: m.dept,
-        email: m.email || "-",
-        rawEmail: m.rawEmail || "",
-        empId: m.empId || "",
-        firstName: m.firstName || "",
-        lastName: m.lastName || "",
-        position: m.position || "",
-        sectionRaw: m.sectionRaw || "",
-        departmentRaw: m.departmentRaw || "",
-        divisionRaw: m.divisionRaw || "",
-        companyRaw: m.companyRaw || "",
-        count: counts[m.name] || 0
-    })).sort((a, b) => {
-        if (a.count !== b.count) return a.count - b.count; 
-        return a.name.localeCompare(b.name); 
-    });
-
-    const sortedTime = [...filtered].sort((a, b) => new Date(a.CreatedDateTime) - new Date(b.CreatedDateTime));
-    const earlyBirdRec = sortedTime[0] || null;
-    const earlyBirdMember = earlyBirdRec ? effMembers.find(m => m.name === earlyBirdRec.Name) : null;
-    const earlyBirdObj = earlyBirdRec ? { ...earlyBirdRec, prefix: earlyBirdMember?.prefix || "" } : null;
-
-    const todayStr = new Date().toISOString().split('T')[0];
-    const todayRecs = filtered.filter(r => r.CreatedDateTime && r.CreatedDateTime.startsWith(todayStr)).length;
-    
-    const latestRecs = [...filtered].reverse().slice(0, 4).map(r => {
-        const m = effMembers.find(x => x.name === r.Name);
-        return { ...r, prefix: m?.prefix || "" };
-    });
-
-    return { 
-        filteredRecords: filtered, 
-        targetPool: pool, 
-        deptStats: sortedDeptStats, 
-        champion: sortedUsers[0] || null, 
-        earlyBird: earlyBirdObj, 
-        pendingList: pending, 
-        todayCount: todayRecs, 
-        latestActivity: latestRecs, 
-        allUserStats: rankedUsers 
-    };
-  }, [records, members, filters]);
-
-  const insightsData = useMemo(() => {
-    const topicCounts = {};
-    filteredRecords.forEach(r => { topicCounts[r.Topic || "Other"] = (topicCounts[r.Topic || "Other"] || 0) + 1; });
-    const topTopics = Object.entries(topicCounts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 5);
-    const dailyTrend = {};
-    filteredRecords.forEach(r => { 
-      if (r.CreatedDateTime) {
-         const dateOnly = r.CreatedDateTime.split(' ')[0]; 
-         dailyTrend[dateOnly] = (dailyTrend[dateOnly] || 0) + 1; 
-      }
-    });
-    const sortedDates = Object.keys(dailyTrend).sort();
-    const readinessScore = targetPool.length > 0 ? Math.round(((targetPool.length - pendingList.length) / targetPool.length) * 100) : 0;
-    
-    return {
-      topTopics, readinessScore,
-      trendChart: {
-        labels: sortedDates.map(d => d.split('-').slice(1).join('/')),
-        datasets: [{
-          label: 'Volume',
-          data: sortedDates.map(d => dailyTrend[d]),
-          borderColor: themeVars.emerald,
-          backgroundColor: themeVars.emeraldBg,
-          fill: true, tension: 0.3, pointRadius: 2, pointBackgroundColor: themeVars.emerald
-        }]
-      }
-    };
-  }, [filteredRecords, targetPool, pendingList, themeVars]);
+  // ✅ เรียกใช้ Custom Hook เพื่อคำนวณข้อมูลทั้งหมด
+  const { 
+    filteredRecords, targetPool, deptStats, champion, earlyBird, pendingList, 
+    latestActivity, allUserStats, insightsData, deptOptions, chartData, comparisonChartData 
+  } = useDashboardMetrics(records, members, filters, themeVars, chartMode);
 
   const handleEditData = () => {
     const pin = prompt("🔐 Enter Security PIN to Edit Data:");
@@ -641,7 +162,7 @@ export default function App() {
     let text = `@All สรุป Self learning ${monthText}\n*Departments ${deptName}*\n`;
 
     if (pendingList.length > 0) {
-      text += `รายชื่อ PENDING WATCHLIST\n` + pendingList.map((m, i) => `${i+1}. ${m.prefix ? m.prefix + ' ' : ''}${m.firstName && m.lastName ? `${m.firstName} ${m.lastName}` : m.name} ${m.email && m.email !== '-' ? `(${m.email})` : ''}`).join('\n');
+      text += `รายชื่อ PENDING WATCHLIST\n` + pendingList.map((m, i) => `${i+1}. ${m.prefix ? m.prefix + ' ' : ''}${m.firstName && m.lastName ? `${m.firstName} ${m.lastName}` : m.name}`).join('\n');
     } else {
       text += `✅ สมาชิกทุกคนเข้าเรียนรู้ครบถ้วน 100% แล้วครับ เยี่ยมมาก! 🎉`;
     }
@@ -759,6 +280,28 @@ export default function App() {
     document.body.removeChild(link);
   };
 
+  const exportWaitingSummary = () => {
+    const csvRows = [];
+    csvRows.push("Email Address Business,SCG Employee ID,Name Prefix (Thai),First Name (Thai),Last Name (Thai),Position Name (Thai),Section (Thai),Department (Thai),Division (Thai),Company (Thai),Topics Completed,Status");
+    
+    const waiters = allUserStats.filter(u => u.count === 0);
+    
+    waiters.forEach(u => {
+      csvRows.push(`"${u.rawEmail || ''}","${u.empId || ''}","${u.prefix || ''}","${u.firstName || ''}","${u.lastName || ''}","${u.position || ''}","${u.sectionRaw || ''}","${u.departmentRaw || ''}","${u.divisionRaw || ''}","${u.companyRaw || ''}",0,"WAITING"`);
+    });
+
+    const csvContent = "\uFEFF" + csvRows.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Waiting_Summary_${filters.year}_${filters.month}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const captureScreen = async () => { 
     if (captureRef.current && window.html2canvas) { 
       const element = captureRef.current;
@@ -771,11 +314,16 @@ export default function App() {
 
       scrollElements.forEach(el => {
         originalStyles.push({
-          el, overflow: el.style.getPropertyValue('overflow'), height: el.style.getPropertyValue('height'), maxHeight: el.style.getPropertyValue('max-height')
+          el, 
+          overflow: el.style.getPropertyValue('overflow'), 
+          height: el.style.getPropertyValue('height'), 
+          maxHeight: el.style.getPropertyValue('max-height'),
+          lineHeight: el.style.getPropertyValue('line-height')
         });
         el.style.setProperty('overflow', 'visible', 'important');
         el.style.setProperty('height', 'max-content', 'important');
         el.style.setProperty('max-height', 'none', 'important');
+        el.style.setProperty('line-height', 'normal', 'important');
       });
 
       await new Promise(r => setTimeout(r, 500));
@@ -790,6 +338,7 @@ export default function App() {
         if (item.overflow) item.el.style.setProperty('overflow', item.overflow); else item.el.style.removeProperty('overflow');
         if (item.height) item.el.style.setProperty('height', item.height); else item.el.style.removeProperty('height');
         if (item.maxHeight) item.el.style.setProperty('max-height', item.maxHeight); else item.el.style.removeProperty('max-height');
+        if (item.lineHeight) item.el.style.setProperty('line-height', item.lineHeight); else item.el.style.removeProperty('line-height');
       });
 
       const link = document.createElement('a'); 
@@ -799,51 +348,23 @@ export default function App() {
     } 
   };
 
-  // ✅ ปรับ Filter Department ให้แสดงเป็นลิสต์แบบตรงๆ ตัด <optgroup label="Others"> ออก
-  const deptOptions = useMemo(() => {
-    // รวบรวมชื่อ Department ทั้งหมดแบบไม่ซ้ำ และกรองค่าว่างออก
-    const allDepts = ["All", ...new Set([...members.map(m => m.dept), ...records.map(r => r.Department)])]
-      .filter(d => d && d !== "-" && d !== "All")
-      .sort();
-      
-    return ["All", ...Array.from(new Set(allDepts))];
-  }, [members, records]);
-
-  const chartData = useMemo(() => {
-    if (chartMode === 'user') {
-      const counts = {}; filteredRecords.forEach(r => counts[r.Name] = (counts[r.Name] || 0) + 1);
-      const top10 = Object.entries(counts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 10);
-      return { labels: top10.map(u => formatShortName(u.name)), datasets: [{ label: 'Records', data: top10.map(u => u.count), backgroundColor: themeVars.blue, borderRadius: 4, barThickness: 10 }] };
-    } else {
-      const topDepts = deptStats.slice(0, 8);
-      return { labels: topDepts.map(d => d.name.length > 20 ? d.name.substring(0, 20) + '...' : d.name), datasets: [{ label: 'Completion %', data: topDepts.map(d => d.rate), backgroundColor: themeVars.emerald, borderRadius: 4, barThickness: 10 }] };
-    }
-  }, [filteredRecords, deptStats, chartMode, themeVars]);
-
-  const comparisonChartData = useMemo(() => {
-    const top15 = deptStats.slice(0, 15);
-    return {
-      labels: top15.map(d => d.name.length > 30 ? d.name.substring(0, 30) + '...' : d.name),
-      datasets: [{ label: 'Completion Rate (%)', data: top15.map(d => d.rate), backgroundColor: top15.map(d => d.rate >= 100 ? themeVars.emerald : (d.rate >= 50 ? themeVars.blue : themeVars.amber)), borderRadius: 4, barThickness: 12 }]
-    };
-  }, [deptStats, themeVars]);
 
   if (isSyncing || isUploadingToCloud) {
     return (
       <div className="fixed inset-0 bg-[var(--bg-panel)]/95 backdrop-blur z-[999] flex flex-col items-center justify-center font-sans text-xs transition-colors duration-300">
         <div className="relative">
-          <div className="w-16 h-16 bg-[var(--bg-base)] border border-[var(--border-main)] rounded-2xl shadow-xl flex items-center justify-center mb-6 animate-pulse">
-             {isUploadingToCloud ? <UploadCloud className="w-8 h-8 text-[var(--c-blue)] fill-current" /> : <Zap className="w-8 h-8 text-[var(--c-emerald)] fill-current" />}
+          <div className="w-16 h-16 bg-[var(--bg-base)] border border-[var(--border-main)] rounded-2xl shadow-xl flex items-center justify-center mb-6 animate-pulse text-2xl font-black">
+             {isUploadingToCloud ? <UploadCloud className="w-8 h-8 text-[var(--c-blue)] fill-current" /> : <span className="text-[var(--c-emerald)]">{Math.min(loadingPercent, 100)}%</span>}
           </div>
           <div className="absolute -bottom-2 -right-2 bg-[var(--bg-panel)] rounded-full p-1 border-2 border-[var(--bg-base)]">
              <Loader2 className={`w-4 h-4 animate-spin ${isUploadingToCloud ? 'text-[var(--c-blue)]' : 'text-[var(--c-emerald)]'}`} />
           </div>
         </div>
         <h2 className="text-xl font-black text-[var(--text-main)] tracking-widest mb-1 uppercase">
-           {isUploadingToCloud ? "UPLOADING TO DATABASE..." : "ESTABLISHING CONNECTION..."}
+           {isUploadingToCloud ? "กำลังอัปโหลดข้อมูล..." : "กำลังเชื่อมต่อระบบ..."}
         </h2>
         <p className={`text-[10px] font-medium uppercase tracking-widest animate-pulse ${isUploadingToCloud ? 'text-[var(--c-blue)]' : 'text-[var(--c-emerald)]'}`}>
-           {isUploadingToCloud ? "Please wait while we push data to Google Sheets" : syncStatusText}
+           {isUploadingToCloud ? "กรุณารอสักครู่ ระบบกำลังส่งข้อมูลไปยัง Google Sheets" : syncStatusText}
         </p>
       </div>
     );
@@ -1024,15 +545,15 @@ export default function App() {
                                 <div className="col-span-2 flex items-center gap-2 pr-2 overflow-hidden">
                                     <div className="w-1 h-full min-h-[12px] bg-[var(--c-red)] rounded-full flex-none opacity-80"></div>
                                     <div className="truncate flex flex-col justify-center">
-                                      <p className="text-[11px] font-medium text-[var(--text-main)] truncate leading-tight">
+                                      <p className="text-[11px] font-medium text-[var(--text-main)] truncate leading-normal py-[2px]">
                                         {m.prefix ? m.prefix + ' ' : ''}{m.firstName && m.lastName ? `${m.firstName} ${m.lastName}` : m.name}
                                       </p>
                                       {m.email && m.email !== "-" && (
-                                        <p className="text-[8px] text-[var(--text-faint)] truncate leading-tight mt-0.5">{m.email}</p>
+                                        <p className="text-[8px] text-[var(--text-faint)] truncate leading-normal mt-0.5 py-[1px]">{m.email}</p>
                                       )}
                                     </div>
                                 </div>
-                                <div className="text-[9px] text-[var(--text-muted)] text-center uppercase truncate">{m.dept}</div>
+                                <div className="text-[9px] text-[var(--text-muted)] text-center uppercase truncate leading-normal py-[2px]">{m.dept}</div>
                                 <div className="text-right">
                                    <span className="inline-block px-1.5 py-0.5 bg-[var(--c-red-bg)] border border-[var(--c-red-bd)] text-[var(--c-red)] text-[8px] rounded font-mono font-bold">WAITING</span>
                                 </div>
@@ -1141,7 +662,7 @@ export default function App() {
               </div>
             </div>
             <div className="flex-1 overflow-hidden relative">
-               <DetailTable data={filteredRecords} currentPage={currentPage} setCurrentPage={setCurrentPage} itemsPerPage={itemsPerPage} />
+              <DetailTable data={filteredRecords} currentPage={currentPage} setCurrentPage={setCurrentPage} itemsPerPage={itemsPerPage} setActiveTab={setActiveTab} setFilters={setFilters} />
             </div>
           </div>
         )}
@@ -1182,8 +703,17 @@ export default function App() {
                     
                     return (
                     <tr key={i} className="hover:bg-[var(--bg-hover)] transition-colors group">
-                      <td className="px-4 py-3 text-[11px] font-medium text-[var(--text-main)] relative max-w-[200px] truncate" title={d.name}>
-                        {d.name}
+                      <td className="px-4 py-3 text-[11px] font-medium relative max-w-[200px] truncate" title={d.name}>
+                        <button 
+                          onClick={() => {
+                            setActiveTab('users');
+                            setFilters(prev => ({ ...prev, dept: d.name }));
+                          }}
+                          className="text-left text-[var(--text-main)] hover:text-[var(--c-blue)] hover:underline transition-colors outline-none"
+                          title="คลิกเพื่อดูพนักงานในแผนกนี้"
+                        >
+                          {d.name}
+                        </button>
                         {i === 0 && <span className="ml-2 text-[8px] px-1 bg-[var(--c-amber-bg)] text-[var(--c-amber)] rounded border border-[var(--c-amber-bd)] font-mono">TOP</span>}
                       </td>
                       <td className="px-4 py-3 text-[10px] text-[var(--text-muted)] text-center font-mono">{d.total}</td>
@@ -1228,6 +758,10 @@ export default function App() {
               <div className="flex gap-2 items-center">
                  <span className="text-[9px] text-[var(--text-muted)] uppercase mr-2">Ranked by Lowest Volume</span>
                  
+                 <button onClick={exportWaitingSummary} className="flex items-center gap-1.5 px-2 py-1 bg-[var(--c-red-bg)] border border-[var(--c-red-bd)] text-[var(--c-red)] hover:bg-[var(--c-red)] hover:text-white rounded transition-colors" title="Export เฉพาะคนที่ยังไม่เข้าเรียน">
+                    <Download className="w-3 h-3" /> <span className="text-[9px] font-bold">EXPORT WAITING</span>
+                 </button>
+
                  <button onClick={exportViewersSummary} className="flex items-center gap-1.5 px-2 py-1 bg-[var(--c-emerald-bg)] border border-[var(--c-emerald-bd)] text-[var(--c-emerald)] hover:bg-[var(--c-emerald)] hover:text-white rounded transition-colors" title="Export เฉพาะคนที่ดูแล้ว">
                     <Download className="w-3 h-3" /> <span className="text-[9px] font-bold">EXPORT ACTIVE</span>
                  </button>
@@ -1254,11 +788,31 @@ export default function App() {
                     return (
                     <tr key={i} className="hover:bg-[var(--bg-hover)] transition-colors group">
                       <td className="px-4 py-3 text-[10px] text-[var(--text-muted)] text-center font-mono">{i + 1}</td>
-                      <td className="px-4 py-3 text-[11px] font-medium text-[var(--text-main)]">
-                         {u.prefix ? u.prefix + ' ' : ''}{u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : u.name}
-                         {u.email && u.email !== "-" && <span className="block text-[9px] text-[var(--text-faint)] mt-0.5">{u.email}</span>}
+                      <td className="px-4 py-3 text-[11px] font-medium">
+                         <button 
+                           onClick={() => {
+                             setActiveTab('detail');
+                             setFilters(prev => ({ ...prev, search: u.name }));
+                           }}
+                           className="text-left text-[var(--text-main)] hover:text-[var(--c-blue)] transition-colors outline-none group/name"
+                           title="คลิกเพื่อดูประวัติการเรียนรู้ทั้งหมด"
+                         >
+                           <span className="group-hover/name:underline">{u.prefix ? u.prefix + ' ' : ''}{u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : u.name}</span>
+                           {u.email && u.email !== "-" && <span className="block text-[9px] text-[var(--text-faint)] mt-0.5 group-hover/name:text-[var(--c-blue)]">{u.email}</span>}
+                         </button>
                       </td>
-                      <td className="px-4 py-3 text-[9px] text-[var(--text-muted)] uppercase truncate max-w-[300px]" title={u.dept}>{u.dept}</td>
+                      <td className="px-4 py-3 text-[9px] uppercase truncate max-w-[300px]" title={u.dept}>
+                         <button 
+                           onClick={() => {
+                             setActiveTab('dept');
+                             setFilters(prev => ({ ...prev, dept: u.dept }));
+                           }}
+                           className="text-left text-[var(--text-muted)] hover:text-[var(--c-blue)] hover:underline transition-colors outline-none"
+                           title="คลิกเพื่อดูหน้า Sector Performance"
+                         >
+                           {u.dept}
+                         </button>
+                      </td>
                       <td className={`px-4 py-3 text-[11px] text-center font-mono font-bold ${isZero ? 'text-[var(--c-red)]' : 'text-[var(--c-emerald)]'}`}>{u.count}</td>
                       <td className="px-4 py-3 text-center">
                          <span className={`inline-block px-1.5 py-0.5 text-[8px] rounded font-mono font-bold border ${isZero ? 'text-[var(--c-red)] bg-[var(--c-red-bg)] border-[var(--c-red-bd)]' : 'text-[var(--c-emerald)] bg-[var(--c-emerald-bg)] border-[var(--c-emerald-bd)]'}`}>
@@ -1328,7 +882,7 @@ export default function App() {
           )}
       </footer>
 
-      <DataModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} isSyncing={isSyncing} onCloudSync={handleCloudSync} onFileUpload={() => {}} onLoadDemo={() => {}} />
+      <DataModal />
     </div>
   );
 }
