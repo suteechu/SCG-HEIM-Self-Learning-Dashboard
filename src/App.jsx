@@ -12,6 +12,7 @@ import {
   LineElement, BarElement, Title, Tooltip, Legend, Filler 
 } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
+import * as XLSX from 'xlsx';
 
 // ✅ นำเข้า Hook และ Components ที่เราแยกไฟล์ออกไป
 import { useGoogleSheets } from './hooks/useGoogleSheets';
@@ -118,9 +119,26 @@ export default function App() {
        alert("⚠️ โปรดนำ URL ของ Apps Script มาใส่ในโค้ดก่อนใช้งานฟีเจอร์นี้ครับ!");
        return;
     }
+    
+    const isExcel = file.name.endsWith('.xlsx');
     const reader = new FileReader();
+    
     reader.onload = async (evt) => {
-      const text = evt.target.result;
+      let rawText = "";
+      
+      if (isExcel) {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        rawText = XLSX.utils.sheet_to_csv(worksheet);
+      } else {
+        rawText = evt.target.result;
+      }
+      
+      // ตัดแถวแรกออกตามที่ต้องการ (เพื่อเอาช่องว่างบรรทัดแรกออก)
+      const text = rawText.substring(rawText.indexOf("\n") + 1);
+      
       setIsUploadingToCloud(true);
       try {
         await fetch(GAS_WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: text });
@@ -135,7 +153,12 @@ export default function App() {
         if(fileInputRef.current) fileInputRef.current.value = "";
       }
     };
-    reader.readAsText(file, 'UTF-8');
+    
+    if (isExcel) {
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.readAsText(file, 'UTF-8');
+    }
   };
 
   // ✅ เรียกใช้ Custom Hook เพื่อคำนวณข้อมูลทั้งหมด
@@ -450,7 +473,7 @@ export default function App() {
                 {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
 
-              <input type="file" accept=".csv" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
+              <input type="file" accept=".csv,.xlsx" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
               <button 
                 onClick={() => fileInputRef.current.click()}
                 className="flex items-center gap-2 px-3 py-1.5 bg-[var(--c-blue-bg)] border border-[var(--c-blue-bd)] text-[var(--c-blue)] text-[10px] font-bold hover:bg-[var(--bg-hover)] transition-all rounded group"
