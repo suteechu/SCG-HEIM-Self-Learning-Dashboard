@@ -136,8 +136,7 @@ export default function App() {
         rawText = evt.target.result;
       }
       
-      // ตัดแถวแรกออกตามที่ต้องการ (เพื่อเอาช่องว่างบรรทัดแรกออก)
-      const text = rawText.substring(rawText.indexOf("\n") + 1);
+      const text = rawText;
       
       setIsUploadingToCloud(true);
       try {
