@@ -373,22 +373,75 @@ export default function App() {
 
 
   if (isSyncing || isUploadingToCloud) {
+    const isUpload = isUploadingToCloud;
+    const progress = Math.min(loadingPercent, 100);
+    const colorVar = isUpload ? 'var(--c-blue)' : 'var(--c-emerald)';
+    const colorBgVar = isUpload ? 'var(--c-blue-bg)' : 'var(--c-emerald-bg)';
+
     return (
-      <div className="fixed inset-0 bg-[var(--bg-panel)]/95 backdrop-blur z-[999] flex flex-col items-center justify-center font-sans text-xs transition-colors duration-300">
-        <div className="relative">
-          <div className="w-16 h-16 bg-[var(--bg-base)] border border-[var(--border-main)] rounded-2xl shadow-xl flex items-center justify-center mb-6 animate-pulse text-2xl font-black">
-             {isUploadingToCloud ? <UploadCloud className="w-8 h-8 text-[var(--c-blue)] fill-current" /> : <span className="text-[var(--c-emerald)]">{Math.min(loadingPercent, 100)}%</span>}
+      <div className="fixed inset-0 bg-[var(--bg-base)]/90 backdrop-blur-md z-[999] flex flex-col items-center justify-center font-sans transition-colors duration-500 overflow-hidden">
+        
+        {/* Tech Background Pattern */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'linear-gradient(var(--text-main) 1px, transparent 1px), linear-gradient(90deg, var(--text-main) 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
+        
+        <div className="relative z-10 flex flex-col items-center w-[340px] p-8 rounded-3xl bg-[var(--bg-panel)] border border-[var(--border-main)] shadow-2xl overflow-hidden group">
+          {/* Top Glowing Edge */}
+          <div className="absolute top-0 left-0 right-0 h-1.5 opacity-80" style={{ backgroundColor: colorVar, boxShadow: `0 0 20px ${colorVar}` }}></div>
+          
+          {/* Circular Progress Display */}
+          <div className="relative w-36 h-36 mb-8 flex items-center justify-center">
+             
+             {/* Dotted Outer Ring */}
+             <svg className="absolute inset-0 w-full h-full -rotate-90 animate-[spin_10s_linear_infinite]" viewBox="0 0 100 100">
+               <circle cx="50" cy="50" r="48" fill="none" stroke="var(--border-main)" strokeWidth="1" strokeDasharray="2 4" />
+             </svg>
+             
+             {/* Smooth Progress Track */}
+             <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+               <circle cx="50" cy="50" r="42" fill="none" stroke="var(--bg-hover)" strokeWidth="3" />
+               <circle cx="50" cy="50" r="42" fill="none" stroke={colorVar} strokeWidth="4" strokeLinecap="round" strokeDasharray={`${(progress / 100) * 263.89} 263.89`} className="transition-all duration-300 ease-out drop-shadow-md" />
+             </svg>
+
+             {/* Inner Core */}
+             <div className="relative w-[72px] h-[72px] rounded-full flex flex-col items-center justify-center bg-[var(--bg-base)] shadow-inner border border-[var(--border-hover)]" style={{ boxShadow: `inset 0 0 15px ${colorBgVar}` }}>
+                {isUpload ? (
+                  <div className="flex flex-col items-center animate-pulse">
+                     <UploadCloud className="w-7 h-7 mb-0.5" style={{ color: colorVar }} />
+                     <span className="text-[9px] font-black font-mono tracking-widest" style={{ color: colorVar }}>SYNC</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center relative top-0.5">
+                     <span className="text-3xl font-black font-mono tracking-tighter leading-none" style={{ color: colorVar }}>{progress}</span>
+                  </div>
+                )}
+             </div>
+
+             {/* Floating Spinner Badge */}
+             <div className="absolute -bottom-1 -right-1 bg-[var(--bg-panel)] rounded-full p-2 border-[3px] border-[var(--bg-base)] shadow-lg">
+                <Loader2 className="w-4 h-4 animate-spin" style={{ color: colorVar }} />
+             </div>
           </div>
-          <div className="absolute -bottom-2 -right-2 bg-[var(--bg-panel)] rounded-full p-1 border-2 border-[var(--bg-base)]">
-             <Loader2 className={`w-4 h-4 animate-spin ${isUploadingToCloud ? 'text-[var(--c-blue)]' : 'text-[var(--c-emerald)]'}`} />
+
+          {/* Typography & Status */}
+          <div className="text-center w-full relative z-10">
+            <h2 className="text-xl font-black text-[var(--text-main)] tracking-widest uppercase mb-3 font-mono flex items-center justify-center gap-2">
+               <Zap className="w-5 h-5 animate-pulse" style={{ color: colorVar }} />
+               {isUpload ? "UPLOADING" : "SYSTEM SYNC"}
+            </h2>
+            
+            <div className="h-7 overflow-hidden rounded-md bg-[var(--bg-base)] border border-[var(--border-main)] flex items-center justify-center relative shadow-inner">
+               <p className="text-[10px] font-bold uppercase tracking-widest font-mono z-10 mix-blend-difference text-white">
+                  {isUpload ? "TRANSMITTING DATA..." : syncStatusText}
+               </p>
+               {/* Linear Progress Fill */}
+               <div className="absolute left-0 top-0 bottom-0 transition-all duration-300 ease-out opacity-80" style={{ width: `${progress}%`, backgroundColor: colorVar }}></div>
+            </div>
+            
+            <p className="mt-5 text-[9px] text-[var(--text-faint)] font-mono uppercase tracking-widest opacity-60">
+              SCG HEIM TERMINAL // DO NOT CLOSE
+            </p>
           </div>
         </div>
-        <h2 className="text-xl font-black text-[var(--text-main)] tracking-widest mb-1 uppercase">
-           {isUploadingToCloud ? "กำลังอัปโหลดข้อมูล..." : "กำลังเชื่อมต่อระบบ..."}
-        </h2>
-        <p className={`text-[10px] font-medium uppercase tracking-widest animate-pulse ${isUploadingToCloud ? 'text-[var(--c-blue)]' : 'text-[var(--c-emerald)]'}`}>
-           {isUploadingToCloud ? "กรุณารอสักครู่ ระบบกำลังส่งข้อมูลไปยัง Google Sheets" : syncStatusText}
-        </p>
       </div>
     );
   }
