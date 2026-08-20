@@ -85,7 +85,7 @@ export default function App() {
   const [filters, setFilters] = useState({ 
     year: '2026', 
     month: currentMonth, 
-    dept: 'All', 
+    dept: 'ส่วนพัฒนาผลิตภัณฑ์และSupply Chain', 
     search: '' 
   });
   
