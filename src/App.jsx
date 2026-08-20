@@ -517,6 +517,12 @@ export default function App() {
             <div className="w-px h-6 bg-[var(--border-main)]"></div>
             <div className="flex items-center gap-2">
               
+              <div className="flex items-center gap-2 mr-2">
+                 <span className="px-2 py-1 bg-[var(--bg-panel)] border border-[var(--border-main)] rounded text-[10px] text-[var(--text-muted)] font-mono font-medium shadow-sm">
+                   Total Data Rows: {records.length}
+                 </span>
+              </div>
+
               <button 
                 onClick={() => setIsDarkMode(!isDarkMode)} 
                 className="flex items-center justify-center w-8 h-8 bg-[var(--bg-base)] border border-[var(--border-main)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--border-hover)] transition-all rounded group" 
