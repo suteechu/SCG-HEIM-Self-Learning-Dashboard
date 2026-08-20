@@ -531,16 +531,6 @@ export default function App() {
                 {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
 
-              <input type="file" accept=".csv,.xlsx" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
-              <button 
-                onClick={() => fileInputRef.current.click()}
-                className="flex items-center gap-2 px-3 py-1.5 bg-[var(--c-blue-bg)] border border-[var(--c-blue-bd)] text-[var(--c-blue)] text-[10px] font-bold hover:bg-[var(--bg-hover)] transition-all rounded group"
-                title="Upload & Sync CSV to Google Sheets"
-              >
-                <UploadCloud className="w-3 h-3" />
-                SYNC CLOUD DB
-              </button>
-
               <button onClick={captureScreen} className="p-2 bg-[var(--bg-base)] border border-[var(--border-main)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:border-[var(--border-hover)] rounded transition-all" title="Capture Screen"><Camera className="w-4 h-4" /></button>
               
               <button 
