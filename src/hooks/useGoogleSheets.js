@@ -50,7 +50,8 @@ export function useGoogleSheets() {
   const processData = useCallback((arrayBuffer, type, contextMembers = []) => {
     if (!window.XLSX) return null;
     const wb = window.XLSX.read(new Uint8Array(arrayBuffer), { type: 'array', codepage: 65001 });
-    const raw = window.XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    const readOpts = type === 'records' ? { range: 1 } : {};
+    const raw = window.XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], readOpts);
 
     const findKey = (row, ...candidates) => {
         const keys = Object.keys(row);
